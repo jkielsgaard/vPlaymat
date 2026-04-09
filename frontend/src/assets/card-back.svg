@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 280">
+  <rect width="200" height="280" rx="12" fill="#1a1a5e"/>
+  <rect x="8" y="8" width="184" height="264" rx="9" fill="none" stroke="#3a3a8e" stroke-width="2"/>
+  <rect x="16" y="16" width="168" height="248" rx="7" fill="none" stroke="#2a2a7e" stroke-width="1"/>
+  <!-- Diamond pattern -->
+  <path d="M100 50 L150 140 L100 230 L50 140 Z" fill="none" stroke="#3a3a9e" stroke-width="1.5" opacity="0.6"/>
+  <path d="M100 70 L140 140 L100 210 L60 140 Z" fill="none" stroke="#3a3a9e" stroke-width="1" opacity="0.4"/>
+  <!-- Center M symbol -->
+  <text x="100" y="152" text-anchor="middle" dominant-baseline="middle" fill="#4a4aae" font-size="56" font-family="serif" font-weight="bold" opacity="0.7">M</text>
+</svg>

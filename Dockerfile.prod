@@ -1,0 +1,40 @@
+# Single-container production build
+# Stage 1 — build Vite frontend
+FROM node:20-alpine AS frontend-builder
+WORKDIR /app
+COPY frontend/package*.json ./
+RUN npm ci
+COPY frontend/ .
+RUN npm run build
+
+# Stage 2 — Python + nginx + supervisord (everything in one container)
+FROM python:3.11-slim
+
+# Install nginx and supervisor
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    nginx \
+    supervisor \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python backend deps (exclude podman-compose — dev-only tool)
+WORKDIR /app/backend
+COPY backend/requirements.txt .
+RUN grep -v 'podman-compose' requirements.txt \
+    | pip install --no-cache-dir -r /dev/stdin
+
+# Copy backend source
+COPY backend/ .
+
+# Copy built frontend static files
+COPY --from=frontend-builder /app/dist /var/www/html
+
+# nginx site config — proxies API to uvicorn on localhost:8000
+COPY nginx.conf /etc/nginx/sites-available/default
+RUN ln -sf /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
+
+# supervisord — manages nginx + uvicorn as a single process group
+COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+EXPOSE 80
+
+CMD ["supervisord", "-n", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

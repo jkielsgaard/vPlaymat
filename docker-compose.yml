@@ -1,0 +1,39 @@
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app:z
+    environment:
+      - PYTHONDONTWRITEBYTECODE=1
+      - PYTHONUNBUFFERED=1
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app:z
+      - frontend_nm:/app/node_modules
+    depends_on:
+      - backend
+
+  backend-test:
+    build: ./backend
+    command: pytest --cov=. --cov-report=term-missing -v
+    volumes:
+      - ./backend:/app:z
+    environment:
+      - TESTING=true
+      - PYTHONDONTWRITEBYTECODE=1
+
+  frontend-test:
+    build: ./frontend
+    command: npm run test:run
+    volumes:
+      - ./frontend:/app:z
+      - frontend_nm:/app/node_modules
+
+volumes:
+  frontend_nm:

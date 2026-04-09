@@ -1,0 +1,22 @@
+# Production deployment — single container (nginx + uvicorn via supervisord).
+# Usage (Podman):  podman-compose -f docker-compose.prod.yml up --build
+# Usage (Docker):  docker compose -f docker-compose.prod.yml up --build
+#
+# The app is served by nginx on port 8080 (host) → 80 (container).
+# nginx serves the Vite build and proxies /game, /deck, /cards, /health, /ws
+# to uvicorn running on 127.0.0.1:8000 inside the same container.
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+    ports:
+      - "8080:80"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PYTHONDONTWRITEBYTECODE=1
+      # Set ALLOWED_ORIGINS to the URL(s) you access the app from.
+      # For local use the default below is fine.
+      - ALLOWED_ORIGINS=http://localhost:8080
+      - PUBLIC_URL=http://localhost:8080
