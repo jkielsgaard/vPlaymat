@@ -39,7 +39,7 @@ export function MenuBar({ settings, onUpdateSettings, onNewGame, connected, onTo
 
         {/* Version — centred in the bar */}
         <div className="absolute left-1/2 -translate-x-1/2 text-gray-500 text-xs font-mono tracking-widest select-none pointer-events-none">
-          v1.5 alpha
+          v1.8 alpha
         </div>
 
         {/* Spacer */}

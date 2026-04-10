@@ -1,5 +1,18 @@
 const SESSION_KEY = 'vmagic-session-id'
 
+// generateUUID() requires a secure context (HTTPS or localhost).
+// Fall back to a Math.random()-based UUID v4 when accessed over plain HTTP
+// (e.g. via a LAN/Tailscale IP address).
+function generateUUID(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return generateUUID()
+  }
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0
+    return (c === 'x' ? r : (r & 0x3) | 0x8).toString(16)
+  })
+}
+
 /**
  * Returns a stable session ID for this browser profile.
  *
@@ -30,11 +43,11 @@ export function getOrCreateSessionId(): string {
     }
 
     // Brand-new session
-    const id = crypto.randomUUID()
+    const id = generateUUID()
     sessionStorage.setItem(SESSION_KEY, id)
     localStorage.setItem(SESSION_KEY, id)
     return id
   } catch {
-    return crypto.randomUUID()
+    return generateUUID()
   }
 }

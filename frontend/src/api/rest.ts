@@ -1,13 +1,18 @@
 // In development VITE_API_BASE=http://localhost:8000 (set in .env)
 // In production it is empty and nginx proxies the paths to the backend
-const BASE = (import.meta.env.VITE_API_BASE as string | undefined) ?? 'http://localhost:8000'
+const BASE = (import.meta.env.VITE_API_BASE as string | undefined) ?? ''
+
+import { getOrCreateSessionId } from '../hooks/useSession'
 
 async function request<T>(
   method: string,
   path: string,
   body?: unknown,
 ): Promise<T> {
-  const res = await fetch(`${BASE}${path}`, {
+  const sessionId = getOrCreateSessionId()
+  const sep = path.includes('?') ? '&' : '?'
+  const url = `${BASE}${path}${sep}session_id=${encodeURIComponent(sessionId)}`
+  const res = await fetch(url, {
     method,
     headers: body ? { 'Content-Type': 'application/json' } : {},
     body: body ? JSON.stringify(body) : undefined,

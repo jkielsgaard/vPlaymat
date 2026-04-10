@@ -3,7 +3,7 @@ from pydantic import BaseModel
 
 from exceptions import EmptyLibraryError, ScryfallAPIError
 from services.scryfall import search_tokens
-from state import broadcast_state, game_state
+from state import broadcast_state, get_or_create_session
 
 router = APIRouter()
 
@@ -30,91 +30,102 @@ class CommanderDamageRequest(BaseModel):
 
 
 @router.post("/draw")
-async def draw(request: DrawRequest):
+async def draw(request: DrawRequest, session_id: str = Query(default="")):
+    gs = get_or_create_session(session_id or "default")
     try:
-        drawn = game_state.draw(request.count)
+        drawn = gs.draw(request.count)
     except EmptyLibraryError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
-    await broadcast_state()
+    await broadcast_state(session_id or "default")
     return {"drawn": [c.to_dict() for c in drawn]}
 
 
 @router.post("/shuffle")
-async def shuffle():
-    game_state.shuffle()
-    await broadcast_state()
-    return {"library_size": len(game_state.library_order)}
+async def shuffle(session_id: str = Query(default="")):
+    gs = get_or_create_session(session_id or "default")
+    gs.shuffle()
+    await broadcast_state(session_id or "default")
+    return {"library_size": len(gs.library_order)}
 
 
 @router.post("/untap-all")
-async def untap_all():
-    game_state.untap_all()
-    await broadcast_state()
+async def untap_all(session_id: str = Query(default="")):
+    gs = get_or_create_session(session_id or "default")
+    gs.untap_all()
+    await broadcast_state(session_id or "default")
     return {"ok": True}
 
 
 @router.post("/commander-returns/reset")
-async def reset_commander_returns():
-    game_state.commander_returns = 0
-    await broadcast_state()
+async def reset_commander_returns(session_id: str = Query(default="")):
+    gs = get_or_create_session(session_id or "default")
+    gs.commander_returns = 0
+    await broadcast_state(session_id or "default")
     return {"ok": True}
 
 
 @router.put("/life")
-async def adjust_life(request: LifeRequest):
-    new_life = game_state.adjust_life(request.delta)
-    await broadcast_state()
+async def adjust_life(request: LifeRequest, session_id: str = Query(default="")):
+    gs = get_or_create_session(session_id or "default")
+    new_life = gs.adjust_life(request.delta)
+    await broadcast_state(session_id or "default")
     return {"life": new_life}
 
 
 @router.post("/mulligan")
-async def mulligan():
-    drawn = game_state.mulligan()
-    await broadcast_state()
+async def mulligan(session_id: str = Query(default="")):
+    gs = get_or_create_session(session_id or "default")
+    drawn = gs.mulligan()
+    await broadcast_state(session_id or "default")
     return {"hand": [c.to_dict() for c in drawn]}
 
 
 @router.post("/reveal")
-async def reveal(request: RevealRequest):
-    top_ids = game_state.library_order[: request.count]
-    top_cards = [game_state.cards[cid].to_dict() for cid in top_ids]
+async def reveal(request: RevealRequest, session_id: str = Query(default="")):
+    gs = get_or_create_session(session_id or "default")
+    top_ids = gs.library_order[: request.count]
+    top_cards = [gs.cards[cid].to_dict() for cid in top_ids]
     return {"cards": top_cards}
 
 
 @router.post("/mode")
-async def set_mode(request: ModeRequest):
+async def set_mode(request: ModeRequest, session_id: str = Query(default="")):
+    gs = get_or_create_session(session_id or "default")
     try:
-        game_state.set_mode(request.mode)
+        gs.set_mode(request.mode)
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc))
-    await broadcast_state()
-    return {"mode": game_state.game_mode, "life": game_state.life}
+    await broadcast_state(session_id or "default")
+    return {"mode": gs.game_mode, "life": gs.life}
 
 
 @router.post("/new")
-async def new_game():
-    game_state.new_game()
-    game_state.draw(7)  # Opening hand
-    await broadcast_state()
+async def new_game(session_id: str = Query(default="")):
+    gs = get_or_create_session(session_id or "default")
+    gs.new_game()
+    gs.draw(7)
+    await broadcast_state(session_id or "default")
     return {"ok": True}
 
 
 @router.post("/poison")
-async def adjust_poison(request: LifeRequest):
-    total = game_state.adjust_poison(request.delta)
-    await broadcast_state()
+async def adjust_poison(request: LifeRequest, session_id: str = Query(default="")):
+    gs = get_or_create_session(session_id or "default")
+    total = gs.adjust_poison(request.delta)
+    await broadcast_state(session_id or "default")
     return {"poison_counters": total}
 
 
 @router.post("/next-turn")
-async def next_turn():
-    drawn = game_state.next_turn()
-    await broadcast_state()
-    return {"turn": game_state.turn, "drawn": drawn.to_dict() if drawn else None}
+async def next_turn(session_id: str = Query(default="")):
+    gs = get_or_create_session(session_id or "default")
+    drawn = gs.next_turn()
+    await broadcast_state(session_id or "default")
+    return {"turn": gs.turn, "drawn": drawn.to_dict() if drawn else None}
 
 
 @router.get("/tokens/search")
-async def token_search(q: str = Query(default="")):
+async def token_search(q: str = Query(default=""), session_id: str = Query(default="")):
     try:
         results = await search_tokens(q)
     except ScryfallAPIError as exc:
@@ -128,10 +139,11 @@ class ScryRequest(BaseModel):
 
 
 @router.post("/scry")
-async def scry(request: ScryRequest):
-    game_state.scry(request.keep_top, request.send_bottom)
-    await broadcast_state()
-    return {"library_size": len(game_state.library_order)}
+async def scry(request: ScryRequest, session_id: str = Query(default="")):
+    gs = get_or_create_session(session_id or "default")
+    gs.scry(request.keep_top, request.send_bottom)
+    await broadcast_state(session_id or "default")
+    return {"library_size": len(gs.library_order)}
 
 
 class CreateTokenRequest(BaseModel):
@@ -142,22 +154,24 @@ class CreateTokenRequest(BaseModel):
 
 
 @router.post("/create-token")
-async def create_token(request: CreateTokenRequest):
-    token = game_state.create_token(
+async def create_token(request: CreateTokenRequest, session_id: str = Query(default="")):
+    gs = get_or_create_session(session_id or "default")
+    token = gs.create_token(
         name=request.name,
         image_uri=request.image_uri,
         x=request.x,
         y=request.y,
     )
-    await broadcast_state()
+    await broadcast_state(session_id or "default")
     return token.to_dict()
 
 
 @router.post("/commander-damage")
-async def add_commander_damage(request: CommanderDamageRequest):
-    total = game_state.add_commander_damage(request.source, request.amount)
-    loss_source = game_state.check_commander_loss()
-    await broadcast_state()
+async def add_commander_damage(request: CommanderDamageRequest, session_id: str = Query(default="")):
+    gs = get_or_create_session(session_id or "default")
+    total = gs.add_commander_damage(request.source, request.amount)
+    loss_source = gs.check_commander_loss()
+    await broadcast_state(session_id or "default")
     return {
         "source": request.source,
         "total": total,

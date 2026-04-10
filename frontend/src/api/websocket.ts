@@ -1,6 +1,15 @@
 import type { GameState } from '../types/game'
 
-const WS_URL = 'ws://localhost:8000/ws'
+// In development VITE_WS_URL=ws://localhost:8000/ws (set in .env)
+// In production it is empty — derive from window.location so it works on any host.
+// Uses wss:// when the page is served over https, ws:// otherwise.
+function getWsUrl(): string {
+  const envUrl = import.meta.env.VITE_WS_URL as string | undefined
+  if (envUrl) return envUrl
+  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+  return `${protocol}//${window.location.host}/ws`
+}
+
 const RECONNECT_DELAY_MS = 2000
 
 export function createWebSocket(
@@ -11,7 +20,7 @@ export function createWebSocket(
   let stopped = false
 
   function connect() {
-    ws = new WebSocket(WS_URL)
+    ws = new WebSocket(getWsUrl())
 
     ws.onopen = () => onStatusChange?.(true)
 

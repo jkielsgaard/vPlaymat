@@ -1,12 +1,12 @@
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 
 from models.card import Card
 from services.deck_parser import parse_decklist
 from services.scryfall import get_cards_batch
-from state import broadcast_state, game_state
+from state import broadcast_state, get_or_create_session
 
 router = APIRouter()
 
@@ -22,7 +22,8 @@ class DeckImportRequest(BaseModel):
 
 
 @router.post("/import")
-async def import_deck(request: DeckImportRequest):
+async def import_deck(request: DeckImportRequest, session_id: str = Query(default="")):
+    sid = session_id or "default"
     if request.game_mode not in VALID_MODES:
         raise HTTPException(status_code=422, detail=f"Invalid game mode: {request.game_mode}")
 
@@ -33,7 +34,6 @@ async def import_deck(request: DeckImportRequest):
     cards: list[Card] = []
     errors: list[str] = []
 
-    # Batch-fetch all unique card names in 1–2 Scryfall API calls
     unique_names = list({name for name, _ in parsed})
     found, not_found_names = await get_cards_batch(unique_names)
     for nf in not_found_names:
@@ -61,33 +61,33 @@ async def import_deck(request: DeckImportRequest):
             detail=f"No cards could be loaded. Errors: {errors}",
         )
 
-    game_state.game_mode = request.game_mode
-    game_state.opponent_count = request.opponent_count
+    gs = get_or_create_session(sid)
+    gs.game_mode = request.game_mode
+    gs.opponent_count = request.opponent_count
 
-    # Build opponent names list, padding with defaults if needed
     names = list(request.opponent_names[: request.opponent_count])
     while len(names) < request.opponent_count:
         names.append(f"Opponent {len(names) + 1}")
-    game_state.opponent_names = names
+    gs.opponent_names = names
 
-    game_state.reset(cards)
-    game_state.shuffle()
-    game_state.draw(7)  # Opening hand
+    gs.reset(cards)
+    gs.shuffle()
+    gs.draw(7)
 
-    # Move the designated commander card to the command zone and flag it
     if request.commander_name:
-        for card in game_state.cards.values():
+        for card in gs.cards.values():
             if card.name.lower() == request.commander_name.lower():
                 card.zone = "command"
                 card.is_commander = True
-                if card.id in game_state.library_order:
-                    game_state.library_order.remove(card.id)
+                if card.id in gs.library_order:
+                    gs.library_order.remove(card.id)
                 break
 
-    await broadcast_state()
+    await broadcast_state(sid)
     return {"loaded": len(cards), "errors": errors}
 
 
 @router.get("/state")
-async def get_state():
-    return game_state.to_dict()
+async def get_state(session_id: str = Query(default="")):
+    gs = get_or_create_session(session_id or "default")
+    return gs.to_dict()

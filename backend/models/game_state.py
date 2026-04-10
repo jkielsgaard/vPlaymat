@@ -7,7 +7,7 @@ from models.card import Card
 from exceptions import EmptyLibraryError, CardNotFoundError
 
 VALID_MODES = {"normal", "commander"}
-SESSION_EXPIRY_SECONDS = 3 * 3600  # 3 hours
+SESSION_EXPIRY_SECONDS = 15 * 60  # 15 minutes of inactivity
 
 
 @dataclass
@@ -299,10 +299,49 @@ class GameState:
         return None
 
     # ------------------------------------------------------------------
-    # Serialisation
+    # Serialisation / deserialisation
     # ------------------------------------------------------------------
 
+    @classmethod
+    def from_dict(cls, data: dict, session_id: str) -> "GameState":
+        """Reconstruct a GameState from a persisted dict (e.g. loaded from disk)."""
+        cards = {
+            cid: Card(
+                id=cid,
+                name=c["name"],
+                image_uri=c["image_uri"],
+                back_image_uri=c.get("back_image_uri", ""),
+                zone=c["zone"],
+                tapped=c.get("tapped", False),
+                counters=c.get("counters", {}),
+                x=c.get("x", 0.0),
+                y=c.get("y", 0.0),
+                is_commander=c.get("is_commander", False),
+                is_token=c.get("is_token", False),
+                face_down=c.get("face_down", False),
+                transformed=c.get("transformed", False),
+            )
+            for cid, c in data.get("cards", {}).items()
+        }
+        state = cls(
+            cards=cards,
+            library_order=data.get("library_order", []),
+            graveyard_order=data.get("graveyard_order", []),
+            life=data.get("life", 20),
+            game_mode=data.get("game_mode", "normal"),
+            commander_damage=data.get("commander_damage", {}),
+            turn=data.get("turn", 1),
+            opponent_count=data.get("opponent_count", 3),
+            opponent_names=data.get("opponent_names", []),
+            poison_counters=data.get("poison_counters", 0),
+            commander_returns=data.get("commander_returns", 0),
+            session_id=session_id,
+            last_active=data.get("last_active", 0.0),
+        )
+        return state
+
     def to_dict(self) -> dict:
+        """Serialise for the frontend (no internal fields)."""
         return {
             "cards": {k: v.to_dict() for k, v in self.cards.items()},
             "library_order": list(self.library_order),
@@ -316,3 +355,9 @@ class GameState:
             "poison_counters": self.poison_counters,
             "commander_returns": self.commander_returns,
         }
+
+    def to_persist_dict(self) -> dict:
+        """Serialise for disk storage — includes last_active for expiry checks."""
+        d = self.to_dict()
+        d["last_active"] = self.last_active
+        return d

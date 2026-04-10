@@ -1,3 +1,4 @@
+import asyncio
 import json
 import logging
 import os
@@ -9,9 +10,9 @@ from fastapi import FastAPI, Query, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 
 from routers import cards, deck, game
-from state import broadcast_state, game_state, manager
+from state import broadcast_state, flush_loop, get_or_create_session, manager
 
-APP_VERSION = "v1.5 alpha"
+APP_VERSION = "v1.8 alpha"
 
 app = FastAPI(title="vPlaymat API")
 
@@ -35,6 +36,7 @@ app.include_router(cards.router, prefix="/cards", tags=["cards"])
 
 @app.on_event("startup")
 async def on_startup() -> None:
+    asyncio.create_task(flush_loop())
     public_url = os.getenv("PUBLIC_URL", "")
     if public_url:
         logger.info("vPlaymat ready — open %s in your browser  [%s]", public_url, APP_VERSION)
@@ -56,30 +58,15 @@ async def websocket_endpoint(
     websocket: WebSocket,
     session_id: Optional[str] = Query(default=None),
 ):
-    await manager.connect(websocket)
+    sid = session_id or "default"
+    await manager.connect(websocket, sid)
+    state = get_or_create_session(sid)
 
-    # ── Session management ──────────────────────────────────────────────
-    # If the incoming session_id differs from the current session:
-    #   • If the existing session has expired (or never existed) → clear state
-    #     so the new session starts fresh.
-    #   • Otherwise keep the existing game state (e.g. two browser windows,
-    #     or a backend restart where the client reconnects quickly).
-    if session_id and session_id != game_state.session_id:
-        # A known prior session exists → clear state so the new session starts fresh.
-        # If session_id is None (backend just started) we just adopt the connecting session
-        # without resetting anything (the state is already empty after a restart).
-        if game_state.session_id is not None:
-            game_state.clear_state()
-        game_state.session_id = session_id
-
-    game_state.touch()
-
-    # Push current state immediately on connect
-    await websocket.send_text(json.dumps(game_state.to_dict()))
+    # Push current state immediately on connect so a returning user sees their board
+    await websocket.send_text(json.dumps(state.to_dict()))
 
     try:
         while True:
-            # Keep the connection alive; client messages are ignored
             await websocket.receive_text()
     except WebSocketDisconnect:
-        manager.disconnect(websocket)
+        manager.disconnect(websocket, sid)

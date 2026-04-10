@@ -20,3 +20,8 @@ services:
       # For local use the default below is fine.
       - ALLOWED_ORIGINS=http://localhost:8080
       - PUBLIC_URL=http://localhost:8080
+    volumes:
+      - session_data:/app/data/sessions
+
+volumes:
+  session_data:
