@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { Portal } from '../ui/Portal'
 import { StartGameWizard } from '../ui/StartGameWizard'
+import { useSettingsContext } from '../../contexts/SettingsContext'
+import { getOrCreateSessionId } from '../../hooks/useSession'
 
 interface GameMenuProps {
   onNewGame: () => void
@@ -11,7 +13,21 @@ export function GameMenu({ onNewGame, onToggleLog }: GameMenuProps) {
   const [open, setOpen] = useState(false)
   const [confirmNew, setConfirmNew] = useState(false)
   const [showImport, setShowImport] = useState(false)
+  const [obsCopied, setObsCopied] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
+  const { settings } = useSettingsContext()
+
+  function copyObsUrl() {
+    const sessionId = getOrCreateSessionId()
+    const { cardScale } = settings
+    const base = `${window.location.origin}${window.location.pathname}`
+    const url = `${base}?obs=1&session_id=${encodeURIComponent(sessionId)}&scale=${cardScale}`
+    navigator.clipboard.writeText(url).then(() => {
+      setObsCopied(true)
+      setTimeout(() => setObsCopied(false), 2000)
+    })
+    setOpen(false)
+  }
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -44,6 +60,10 @@ export function GameMenu({ onNewGame, onToggleLog }: GameMenuProps) {
             <div className="border-t border-gold/10 my-1" />
             <MenuItem onClick={() => { setOpen(false); onToggleLog() }}>
               Game Log
+            </MenuItem>
+            <div className="border-t border-gold/10 my-1" />
+            <MenuItem onClick={copyObsUrl}>
+              {obsCopied ? '✓ Copied!' : 'Copy OBS URL'}
             </MenuItem>
           </div>
         )}

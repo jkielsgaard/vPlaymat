@@ -4,15 +4,23 @@ import { useSettings } from './hooks/useSettings'
 import { SettingsContext } from './contexts/SettingsContext'
 import { MenuBar } from './components/menu/MenuBar'
 import { Playmat } from './components/layout/Playmat'
+import { OBSView } from './components/layout/OBSView'
 import { StartGameWizard } from './components/ui/StartGameWizard'
 import { DisclaimerModal } from './components/overlays/DisclaimerModal'
 import { ReconnectBanner } from './components/overlays/ReconnectBanner'
 import * as api from './api/rest'
 
+// Detect OBS mode — ?obs=1 in the URL
+const urlParams = new URLSearchParams(window.location.search)
+const IS_OBS = urlParams.get('obs') === '1'
+
 const DISCLAIMER_KEY = 'vmagic-disclaimer-accepted'
 const BETA_DISMISSED_KEY = 'vplaymat-beta-dismissed'
 
 export default function App() {
+  // OBS mode — render only the arena, no UI chrome
+  if (IS_OBS) return <OBSView />
+
   const { gameState, connected } = useBoard()
   const { settings, updateSettings } = useSettings()
   const [wizardDismissed, setWizardDismissed] = useState(false)

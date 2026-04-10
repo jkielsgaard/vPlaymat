@@ -8,14 +8,15 @@ A Magic: The Gathering virtual playmat for personal use during online play (Spel
 
 ## Screenshots
 
-> _Screenshots coming soon_
->
-> Suggested shots:
-> - `screenshot-battlefield.png` — active battlefield with cards, counters, a stacked group
-> - `screenshot-stacked.png` — equipment attached to a creature, rubber band selection visible
-> - `screenshot-commander.png` — commander zone with tax counter, commander damage panel
-> - `screenshot-settings.png` — settings panel open
+![Battlefield](docs/screenshots/screenshot-battlefield.png)
 
+![Stacked cards & context menu](docs/screenshots/screenshot-stacked.png)
+
+![Commander zone](docs/screenshots/screenshot-commander.png)
+
+![Card selection](docs/screenshots/screenshot_cardselection.png)
+
+![Settings panel](docs/screenshots/screenshot-settings.png)
 ---
 
 ## Features
@@ -102,13 +103,61 @@ docker compose -f docker-compose.prod.yml up --build
 
 Open **http://localhost:8080** in your browser.
 
-### OBS Browser Source setup
+### Streaming with OBS
 
-1. In OBS, add a **Browser Source**
-2. Set the URL to `http://localhost:8080`
-3. Set **Width** and **Height** to match your arena size in Settings (default: 1280 × 720)
-4. Leave Custom CSS empty
-5. The arena border aligns with your OBS scene — everything below it stays private
+You play vPlaymat in your browser as normal. OBS captures a clean view of the arena and sends it to your opponents via a virtual camera in Spelltable, Discord, or any other platform.
+
+There are two capture methods — pick whichever suits you.
+
+---
+
+#### Method 1 — OBS Browser Source (recommended)
+
+vPlaymat has a built-in clean OBS view: no menu bar, no hand zone, nothing private. It connects to your active game session and updates live.
+
+**Setup (one time):**
+
+1. Open vPlaymat in your browser and import your deck — this is where you play
+2. Open the **Game** menu and click **Copy OBS URL**
+3. In OBS, click **+** in the Sources panel and choose **Browser**
+4. Paste the copied URL as the URL
+5. Set **Width** and **Height** to match your arena size in Settings (default **1280 × 720**)
+   > ⚠️ This must exactly match your arena size — if it is off the battlefield will be cropped or have black bars
+6. Click OK
+
+**If you see a black bar under the battlefield:**
+Your OBS scene canvas is larger than your browser source. Fix with one of these:
+- OBS → Settings → Video → set Base (Canvas) Resolution to **1280 × 720**
+- Or right-click the source → **Transform → Fit to screen** to scale it up to fill your canvas
+
+**Sending to Spelltable / Discord:**
+
+7. In OBS click **Start Virtual Camera**
+8. In Spelltable or Discord, select **OBS Virtual Camera** as your camera
+
+---
+
+#### Method 2 — Screen capture
+
+If you prefer not to use the Browser Source, you can capture your browser window directly.
+
+1. In OBS, click **+** in Sources and choose **Window Capture** (or **Display Capture**)
+2. Select the browser window running vPlaymat
+3. Add a **Crop/Pad** filter (right-click source → Filters) to crop to just the arena area — everything below the arena border is private and should be cropped out
+4. Enable **OBS Virtual Camera** and select it in Spelltable / Discord
+
+**What to be aware of with screen capture:**
+- If you resize your browser window the crop will be off and needs to be re-adjusted
+- Your browser window must not be hidden behind other windows during play
+- The arena includes the menu bar at the top — crop that out too if you want a clean look
+
+---
+
+#### General tips
+
+- The **arena size** in vPlaymat Settings (default 1280 × 720) should match your OBS canvas and your stream output resolution for the cleanest result
+- Everything **below the arena** (hand, card preview, buttons) is never visible in either capture method — it stays private
+- If you change your arena size in Settings, update the Browser Source dimensions in OBS to match
 
 ---
 

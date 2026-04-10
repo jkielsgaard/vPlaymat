@@ -115,22 +115,41 @@ export function HelpPanel({ onClose }: HelpPanelProps) {
           <Row label="New Game" desc="Reset the board (confirmation required)" />
           <Row label="Import New Deck" desc="Load a new deck in MTGA format" />
           <Row label="Game Log" desc="Toggle the action log panel below the arena" />
+          <Row label="Copy OBS URL" desc="Copies a clean arena-only URL for OBS Browser Source — includes your session ID so it mirrors your game live" />
         </Section>
 
-        <Section title="OBS Browser Source setup">
-          <div className="text-xs text-gray-400 leading-relaxed space-y-2">
-            <p>In OBS, add a <strong className="text-gray-200">Browser Source</strong> with these settings:</p>
-            <ul className="list-disc list-inside space-y-1 ml-1">
-              <li>URL: <code className="text-gold bg-black/40 px-1 rounded">http://localhost:5173</code></li>
-              <li>Width &amp; Height: match your arena size in Settings</li>
-              <li>Custom CSS: <em>leave empty</em></li>
-              <li>Shutdown source when not visible: <em>unchecked</em></li>
-            </ul>
-            <p className="mt-2">
-              Position the browser source so only the arena (the coloured border box) is captured.
-              Everything below the arena — your hand, library browser, game log — is private and
-              will not appear in OBS.
+        <Section title="Streaming with OBS">
+          <div className="text-xs text-gray-400 leading-relaxed space-y-3">
+
+            <p className="text-gray-300 font-medium">Method 1 — Browser Source (recommended)</p>
+            <ol className="list-decimal list-inside space-y-1 ml-1">
+              <li>Play normally in this browser window</li>
+              <li>Game menu → <strong className="text-gray-200">Copy OBS URL</strong></li>
+              <li>In OBS: add a <strong className="text-gray-200">Browser Source</strong></li>
+              <li>Paste the URL and set <strong className="text-gray-200">Width × Height</strong> to match your arena size in Settings (default 1280 × 720)</li>
+              <li>Click <strong className="text-gray-200">Start Virtual Camera</strong> in OBS</li>
+              <li>Select <strong className="text-gray-200">OBS Virtual Camera</strong> in Spelltable / Discord</li>
+            </ol>
+
+            <p className="text-amber-400/80 text-[11px]">
+              ⚠ Width &amp; Height in OBS must exactly match your arena size — if they differ you will see a cropped view or black bars.
             </p>
+
+            <p className="text-[11px]">
+              <strong className="text-gray-300">Black bar below the battlefield?</strong>{' '}
+              Your OBS canvas is larger than the source. Fix: OBS → Settings → Video → set Base Resolution to <strong className="text-gray-200">1280 × 720</strong>, or right-click the source → <strong className="text-gray-200">Transform → Fit to screen</strong>.
+            </p>
+
+            <p className="text-gray-300 font-medium pt-1">Method 2 — Screen capture</p>
+            <ol className="list-decimal list-inside space-y-1 ml-1">
+              <li>In OBS add a <strong className="text-gray-200">Window Capture</strong> source pointing at this browser window</li>
+              <li>Add a <strong className="text-gray-200">Crop/Pad</strong> filter (right-click source → Filters) to cut to just the arena — crop out the menu bar at the top and everything below the arena border</li>
+              <li>Enable Virtual Camera and select it in Spelltable / Discord</li>
+            </ol>
+            <p className="text-[11px]">
+              Note: if you resize the browser window the crop will be off and needs re-adjusting.
+            </p>
+
           </div>
         </Section>
 

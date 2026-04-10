@@ -47,7 +47,10 @@ export function useBoard() {
   useEffect(() => {
     stopRef.current = false
     let ws: WebSocket
-    const sessionId = getOrCreateSessionId()
+    // OBS view passes session_id in the URL — use it directly so the OBS browser
+    // connects to the same session as the player's browser without sharing localStorage.
+    const urlSessionId = new URLSearchParams(window.location.search).get('session_id')
+    const sessionId = urlSessionId || getOrCreateSessionId()
     const wsUrl = `${getWsUrl()}?session_id=${encodeURIComponent(sessionId)}`
 
     function connect() {
