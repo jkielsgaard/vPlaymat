@@ -218,6 +218,14 @@ See [`render.yaml`](render.yaml) for a one-click Blueprint, or follow the manual
 
 ---
 
+## Support
+
+vPlaymat is free and will always be free. If you enjoy it and want to say thanks, a coffee is always appreciated:
+
+[![Buy Me a Coffee](https://img.shields.io/badge/Buy%20me%20a%20coffee-☕-yellow?style=flat)](https://buymeacoffee.com/jkielsgaard)
+
+---
+
 ## Legal & attribution
 
 vPlaymat is a personal, non-commercial tool for use during online Magic: The Gathering games.

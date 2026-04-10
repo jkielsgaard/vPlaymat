@@ -20,10 +20,15 @@ import { TokenCreator } from '../overlays/TokenCreator'
 import { ScryPanel } from '../overlays/ScryPanel'
 import { RevealOverlay } from '../overlays/RevealOverlay'
 
+// ── Buy Me a Coffee ──────────────────────────────────────────────────────────
+// TODO: replace the placeholder URL below with your buymeacoffee.com link
+const COFFEE_URL = 'https://buymeacoffee.com/jkielsgaard'
+
 interface PlaymatProps {
   gameState: GameState
   logOpen: boolean
   onCloseLog: () => void
+  betaBannerVisible?: boolean
 }
 
 interface ContextMenuState {
@@ -43,7 +48,7 @@ const ZONE_LABELS: Record<string, string> = {
   command: 'Command Zone',
 }
 
-export function Playmat({ gameState, logOpen, onCloseLog }: PlaymatProps) {
+export function Playmat({ gameState, logOpen, onCloseLog, betaBannerVisible = false }: PlaymatProps) {
   const actions = useActions()
   const { settings } = useSettingsContext()
   const { entries, addEntry, clearLog } = useGameLog()
@@ -323,7 +328,7 @@ export function Playmat({ gameState, logOpen, onCloseLog }: PlaymatProps) {
 
   return (
     <div
-      className="min-h-screen flex flex-col items-start justify-start pt-14 pb-4"
+      className={`min-h-screen flex flex-col items-start justify-start ${betaBannerVisible ? 'pt-20' : 'pt-14'} pb-4`}
       style={{ background: pageBackground, paddingLeft: 10 }}
     >
       {/* ── Arena ── everything inside here is what OBS captures ─────── */}
@@ -449,6 +454,16 @@ export function Playmat({ gameState, logOpen, onCloseLog }: PlaymatProps) {
                 onLog={(msg) => addEntry(turn, msg)}
               />
             )}
+
+            {/* Buy Me a Coffee — pushed to the far right */}
+            <a
+              href={COFFEE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="ml-auto shrink-0 flex items-center gap-1.5 px-2.5 py-1 rounded bg-yellow-500/20 border border-yellow-500/40 text-yellow-300 text-[10px] font-semibold hover:bg-yellow-500/30 transition-colors"
+            >
+              ☕ Buy me a coffee
+            </a>
           </div>
 
           {/* Reveal overlay — inside arena so OBS captures it */}
