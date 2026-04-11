@@ -263,6 +263,12 @@ In production (`docker-compose.prod.yml`), nginx proxies all API calls on the sa
 
 ---
 
+## Disclaimer
+
+vPlaymat is provided as-is, without warranty of any kind. It is not a rules engine and does not enforce the rules of Magic: The Gathering — players are responsible for playing correctly. Card data is sourced from Scryfall and is used as-is; vPlaymat makes no guarantee of its accuracy or completeness. vPlaymat does not collect, store, or transmit any personal data.
+
+---
+
 ## Legal & attribution
 
 vPlaymat is a personal, non-commercial tool for use during online Magic: The Gathering games.
@@ -272,7 +278,7 @@ Magic: The Gathering, its card names, and all related IP are trademarks of **Wiz
 Card images and data are provided by **[Scryfall](https://scryfall.com)** under their [API terms](https://scryfall.com/docs/api).
 This application is non-commercial and makes no claim of ownership over any card artwork.
 
-By using vPlaymat you agree to use the application only for personal, non-commercial play and will not redistribute or resell card data obtained through this application.
+By using vPlaymat you agree to use the application only for personal, non-commercial play, with cards you own or have the right to use, and will not redistribute or resell card data obtained through this application.
 
 ---
 
