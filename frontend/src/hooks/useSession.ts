@@ -5,7 +5,7 @@ const SESSION_KEY = 'vmagic-session-id'
 // (e.g. via a LAN/Tailscale IP address).
 function generateUUID(): string {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
-    return generateUUID()
+    return crypto.randomUUID()
   }
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
     const r = (Math.random() * 16) | 0

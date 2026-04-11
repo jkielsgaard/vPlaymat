@@ -9,14 +9,20 @@ A Magic: The Gathering virtual playmat for personal use during online play (Spel
 ## Screenshots
 
 ![Battlefield](docs/screenshots/screenshot-battlefield.png)
+*The main battlefield — cards placed freely, life counter and controls along the bottom.*
 
 ![Stacked cards & context menu](docs/screenshots/screenshot-stacked.png)
+*Right-click context menu with zone move options; stacked permanents with visible card slivers.*
 
 ![Commander zone](docs/screenshots/screenshot-commander.png)
+*Commander zone with tax counter tracking how many times your commander has returned from play.*
 
 ![Card selection](docs/screenshots/screenshot_cardselection.png)
+*Multi-select with rubber band or Shift+click — gold ring highlights selected cards.*
 
 ![Settings panel](docs/screenshots/screenshot-settings.png)
+*Settings panel — arena size, card scales, stack gap, background colours and more.*
+
 ---
 
 ## Features
@@ -292,9 +298,3 @@ you will use the application only for personal, non-commercial play.
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for how to set up a dev environment and submit changes.
-
----
-
-## License
-
-[MIT](LICENSE)

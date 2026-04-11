@@ -39,7 +39,7 @@ export function MenuBar({ settings, onUpdateSettings, onNewGame, connected, onTo
 
         {/* Version — centred in the bar */}
         <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2 select-none pointer-events-none">
-          <span className="text-gray-500 text-xs font-mono tracking-widest">v2.2 beta</span>
+          <span className="text-gray-500 text-xs font-mono tracking-widest">v2.3 beta</span>
           <span className="bg-amber-700/70 text-amber-300 text-[9px] font-bold px-1.5 py-0.5 rounded tracking-wider uppercase">
             BETA
           </span>
