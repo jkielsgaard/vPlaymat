@@ -88,6 +88,14 @@ A Magic: The Gathering virtual playmat for personal use during online play (Spel
 
 ---
 
+## Support
+
+vPlaymat is free and will always be free. If you enjoy it and want to say thanks, a coffee is always appreciated:
+
+[![Buy Me a Coffee](https://img.shields.io/badge/Buy%20me%20a%20coffee-☕-yellow?style=flat)](https://buymeacoffee.com/jkielsgaard)
+
+---
+
 ## Quick start — Podman / Docker
 
 One command builds and starts everything in a single container (nginx + uvicorn via supervisord):
@@ -241,24 +249,6 @@ In production (`docker-compose.prod.yml`), nginx proxies all API calls on the sa
 
 ---
 
-## Self-hosting on Render.com
-
-Render.com offers free-tier hosting. vPlaymat deploys as a **single Docker container** — no separate services needed.
-
-See [`render.yaml`](render.yaml) for a one-click Blueprint, or follow the manual steps:
-
-1. **New Web Service** → connect your GitHub fork → **Docker** runtime
-2. Dockerfile path: `Dockerfile.prod`, Docker context: `.` (repo root)
-3. After the first deploy, copy your service URL (e.g. `https://vplaymat.onrender.com`)
-4. Set env vars in the Render dashboard:
-   - `ALLOWED_ORIGINS=https://vplaymat.onrender.com`
-   - `PUBLIC_URL=https://vplaymat.onrender.com`
-5. Trigger a redeploy
-
-> **Free tier note:** Render spins down idle services after 15 minutes. The backend may take ~30 seconds to wake up. The reconnect banner will show while it wakes — your cached game state restores automatically.
-
----
-
 ## Tech stack
 
 | Layer | Technology |
@@ -273,14 +263,6 @@ See [`render.yaml`](render.yaml) for a one-click Blueprint, or follow the manual
 
 ---
 
-## Support
-
-vPlaymat is free and will always be free. If you enjoy it and want to say thanks, a coffee is always appreciated:
-
-[![Buy Me a Coffee](https://img.shields.io/badge/Buy%20me%20a%20coffee-☕-yellow?style=flat)](https://buymeacoffee.com/jkielsgaard)
-
----
-
 ## Legal & attribution
 
 vPlaymat is a personal, non-commercial tool for use during online Magic: The Gathering games.
@@ -290,8 +272,7 @@ Magic: The Gathering, its card names, and all related IP are trademarks of **Wiz
 Card images and data are provided by **[Scryfall](https://scryfall.com)** under their [API terms](https://scryfall.com/docs/api).
 This application is non-commercial and makes no claim of ownership over any card artwork.
 
-By using vPlaymat you confirm you own or have the right to use the cards you import, and that
-you will use the application only for personal, non-commercial play.
+By using vPlaymat you agree to use the application only for personal, non-commercial play and will not redistribute or resell card data obtained through this application.
 
 ---
 
