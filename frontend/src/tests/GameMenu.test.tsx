@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { GameMenu } from '../components/menu/GameMenu'
 
 vi.mock('../api/rest', () => ({
@@ -12,6 +12,12 @@ describe('GameMenu', () => {
 
   beforeEach(() => {
     onNewGame.mockClear()
+    localStorage.clear()
+    sessionStorage.clear()
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
   })
 
   it('renders the Game menu button', () => {
@@ -47,5 +53,45 @@ describe('GameMenu', () => {
     await userEvent.click(screen.getByText(/new game/i))
     await userEvent.click(screen.getByRole('button', { name: /cancel/i }))
     expect(onNewGame).not.toHaveBeenCalled()
+  })
+})
+
+describe('GameMenu — Copy OBS URL', () => {
+  let writeText: ReturnType<typeof vi.fn>
+
+  beforeEach(() => {
+    localStorage.clear()
+    sessionStorage.clear()
+    writeText = vi.fn().mockResolvedValue(undefined)
+    Object.defineProperty(navigator, 'clipboard', {
+      value: { writeText },
+      configurable: true,
+    })
+  })
+
+  it('shows "Copy OBS URL" in the dropdown', async () => {
+    render(<GameMenu onNewGame={vi.fn()} onToggleLog={vi.fn()} />)
+    await userEvent.click(screen.getByRole('button', { name: /game/i }))
+    expect(screen.getByText(/copy obs url/i)).toBeInTheDocument()
+  })
+
+  it('copies a URL with obs=1, session_id, and scale to the clipboard', async () => {
+    render(<GameMenu onNewGame={vi.fn()} onToggleLog={vi.fn()} />)
+    await userEvent.click(screen.getByRole('button', { name: /game/i }))
+    await userEvent.click(screen.getByText(/copy obs url/i))
+
+    expect(writeText).toHaveBeenCalledTimes(1)
+    const url = writeText.mock.calls[0][0] as string
+    expect(url).toContain('obs=1')
+    expect(url).toContain('session_id=')
+    expect(url).toContain('scale=')
+  })
+
+  it('closes the dropdown after copying', async () => {
+    render(<GameMenu onNewGame={vi.fn()} onToggleLog={vi.fn()} />)
+    await userEvent.click(screen.getByRole('button', { name: /game/i }))
+    await userEvent.click(screen.getByText(/copy obs url/i))
+
+    await waitFor(() => expect(screen.queryByText(/import new deck/i)).not.toBeInTheDocument())
   })
 })
