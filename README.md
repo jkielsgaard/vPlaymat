@@ -299,6 +299,8 @@ you will use the application only for personal, non-commercial play.
 
 [![CC BY-NC-SA 4.0](https://licensebuttons.net/l/by-nc-sa/4.0/88x31.png)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
 
+© 2026 Jesper Kielsgaard
+
 This project is licensed under [Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International](LICENSE).
 You are free to share and adapt it for non-commercial purposes, as long as you give credit and distribute under the same license.
 
