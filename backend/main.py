@@ -12,7 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from routers import cards, deck, game
 from state import broadcast_state, flush_loop, get_or_create_session, manager
 
-APP_VERSION = "v1.0.0 beta"
+APP_VERSION = "v1.0.1 beta"
 
 app = FastAPI(title="vPlaymat API")
 
