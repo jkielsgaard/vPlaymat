@@ -72,7 +72,7 @@ export function SettingsPanel({ settings, onUpdate, onClose }: SettingsPanelProp
           <input
             type="range"
             aria-label="Card scale"
-            min={0.5}
+            min={1.3}
             max={2.0}
             step={0.1}
             value={settings.cardScale}
@@ -80,7 +80,7 @@ export function SettingsPanel({ settings, onUpdate, onClose }: SettingsPanelProp
             className="w-full accent-gold"
           />
           <div className="flex justify-between text-gray-500 text-xs mt-1">
-            <span>0.5×</span><span>2.0×</span>
+            <span>1.3×</span><span>2.0×</span>
           </div>
         </section>
 
@@ -161,15 +161,15 @@ export function SettingsPanel({ settings, onUpdate, onClose }: SettingsPanelProp
               <input
                 type="range"
                 aria-label="Commander card scale"
-                min={0.4}
-                max={1.5}
+                min={1.0}
+                max={2.0}
                 step={0.1}
                 value={settings.commanderCardScale}
                 onChange={(e) => onUpdate({ commanderCardScale: parseFloat(e.target.value) })}
                 className="w-full accent-gold"
               />
               <div className="flex justify-between text-gray-500 text-xs mt-0.5">
-                <span>0.4×</span><span>1.5×</span>
+                <span>1.0×</span><span>2.0×</span>
               </div>
             </div>
             <div>
@@ -318,10 +318,10 @@ export function SettingsPanel({ settings, onUpdate, onClose }: SettingsPanelProp
           </div>
         </section>
 
-        {/* Zone viewer (Graveyard & Exile) */}
+        {/* Zone viewer (Graveyard, Exile & Library) */}
         <section>
           <h3 className="text-gold text-xs font-semibold tracking-widest uppercase mb-2">
-            Zone Viewer (GY &amp; Exile)
+            Zone Viewer (GY, Exile &amp; Library)
           </h3>
           <label className="text-gray-400 text-xs block mb-1">
             Card size — {settings.zoneViewerCardScale.toFixed(1)}×

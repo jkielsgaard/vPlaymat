@@ -2,6 +2,9 @@
 
 A Magic: The Gathering virtual playmat for personal use during online play (Spelltable, Discord, etc.). Stream it via OBS Browser Source instead of a physical webcam — your opponent sees a clean digital board while you control everything privately.
 
+**No account needed. Free to use.**
+👉 **[https://vplaymat.com](https://vplaymat.com)**
+
 > Built with [Claude Code](https://claude.ai/claude-code) — AI-assisted vibe coding.
 
 ---
@@ -96,9 +99,17 @@ vPlaymat is free and will always be free. If you enjoy it and want to say thanks
 
 ---
 
-## Quick start — Podman / Docker
+## Quick start
 
-One command builds and starts everything in a single container (nginx + uvicorn via supervisord):
+### Hosted version (no setup required)
+
+Just open **[https://vplaymat.com](https://vplaymat.com)** in your browser — no account, no install, nothing to configure. Import your deck and start playing.
+
+---
+
+### Self-host with Podman / Docker
+
+Want to run your own instance? One command builds and starts everything in a single container (nginx + uvicorn via supervisord):
 
 ```bash
 # Clone the repo
