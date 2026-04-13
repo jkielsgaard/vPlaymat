@@ -15,7 +15,6 @@ const urlParams = new URLSearchParams(window.location.search)
 const IS_OBS = urlParams.get('obs') === '1'
 
 const DISCLAIMER_KEY = 'vmagic-disclaimer-accepted'
-const BETA_DISMISSED_KEY = 'vplaymat-beta-dismissed'
 
 export default function App() {
   // OBS mode — render only the arena, no UI chrome
@@ -25,15 +24,6 @@ export default function App() {
   const { settings, updateSettings } = useSettings()
   const [wizardDismissed, setWizardDismissed] = useState(false)
   const [logOpen, setLogOpen] = useState(false)
-
-  // Beta notice — shown once per browser session, dismissed until next visit
-  const [betaDismissed, setBetaDismissed] = useState(
-    () => sessionStorage.getItem(BETA_DISMISSED_KEY) === 'true',
-  )
-  function dismissBeta() {
-    sessionStorage.setItem(BETA_DISMISSED_KEY, 'true')
-    setBetaDismissed(true)
-  }
 
   // 3.1 — First-time disclaimer
   const [disclaimerAccepted, setDisclaimerAccepted] = useState(
@@ -84,31 +74,6 @@ export default function App() {
         onToggleLog={() => setLogOpen((v) => !v)}
       />
 
-      {/* Beta notice — fixed strip just below the menu bar */}
-      {!betaDismissed && (
-        <div className="fixed top-12 left-0 right-0 z-20 flex items-center justify-between px-4 py-1 bg-amber-900/80 border-b border-amber-600/40 backdrop-blur-sm">
-          <span className="text-amber-200 text-xs">
-            <strong className="text-amber-400">Beta</strong> — vPlaymat is under active development.
-            You may encounter bugs or unexpected behaviour.{' '}
-            <a
-              href="https://github.com/jkielsgaard/vPlaymat/issues"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline text-amber-300 hover:text-amber-100"
-            >
-              Report an issue
-            </a>
-          </span>
-          <button
-            onClick={dismissBeta}
-            className="text-amber-400 hover:text-amber-100 ml-4 text-sm leading-none transition-colors"
-            aria-label="Dismiss beta notice"
-          >
-            ✕
-          </button>
-        </div>
-      )}
-
       {/* 3.4 — Reconnect banner (non-blocking) */}
       {showReconnectBanner && <ReconnectBanner lostAt={disconnectedAt!} />}
 
@@ -128,7 +93,7 @@ export default function App() {
           </div>
         </div>
       ) : (
-        <Playmat gameState={gameState} logOpen={logOpen} onCloseLog={() => setLogOpen(false)} betaBannerVisible={!betaDismissed} />
+        <Playmat gameState={gameState} logOpen={logOpen} onCloseLog={() => setLogOpen(false)} betaBannerVisible={false} />
       )}
 
       {showAutoWizard && (
