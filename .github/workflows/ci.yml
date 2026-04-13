@@ -110,3 +110,8 @@ jobs:
           tags: |
             ghcr.io/${{ github.repository_owner }}/vplaymat:latest
             ghcr.io/${{ github.repository_owner }}/vplaymat:${{ github.sha }}
+
+      - name: Trigger Coolify deploy
+        run: |
+          curl -s -o /dev/null -w "%{http_code}" \
+            "${{ secrets.COOLIFY_DEPLOY_WEBHOOK }}"
