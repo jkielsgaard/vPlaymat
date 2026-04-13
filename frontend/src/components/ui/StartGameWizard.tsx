@@ -2,6 +2,29 @@ import { useState } from 'react'
 import { importDeck } from '../../api/rest'
 import { Portal } from './Portal'
 
+const DEMO_DECK = `1 Nahiri, the Lithomancer (CMM) 45
+1 Adanto Vanguard (PLST) XLN-1
+1 Angelic Destiny (FDN) 565
+1 Anointer Priest (AKH) 3
+1 Arcane Signet (ZNC) 106
+1 Baneslayer Angel (M21) 6
+1 Dauntless Bodyguard (DOM) 14
+1 Emeria, the Sky Ruin (PLIST) 287
+1 Flickering Ward (TMP) 19
+1 Heliod, Sun-Crowned (PTHB) 18p
+1 Hyena Umbra (2X2) 13
+1 Lightning Greaves (PLST) C19-217
+1 Linden, the Steadfast Queen (PLST) ELD-20
+1 Luminarch Aspirant (ZNR) 24
+1 Lyra Dawnbringer (FDN) 707
+10 Plains (J25) 81
+1 Resplendent Angel (LCI) 334
+1 Secluded Steppe (CM2) 266
+1 Selfless Spirit (TDC) 129
+1 Serra Angel (DVD) 10
+1 Sol Ring (C21) 263
+1 Thraben Inspector (SOI) 44`
+
 interface StartGameWizardProps {
   onClose: () => void
 }
@@ -107,19 +130,27 @@ export function StartGameWizard({ onClose }: StartGameWizardProps) {
                 autoFocus
               />
               {error && <p className="text-red-400 text-sm mt-2">{error}</p>}
-              <div className="flex justify-end gap-3 mt-4">
+              <div className="flex justify-between gap-3 mt-4">
                 <button
-                  className="px-4 py-2 text-sm text-gray-400 hover:text-gray-200 transition-colors"
-                  onClick={onClose}
+                  className="px-4 py-2 text-sm text-gray-500 hover:text-gray-300 border border-gray-700 hover:border-gray-500 rounded transition-colors"
+                  onClick={() => setDecklist(DEMO_DECK)}
                 >
-                  Cancel
+                  Try demo deck
                 </button>
-                <button
-                  className="px-4 py-2 text-sm bg-gold text-black font-semibold rounded hover:bg-gold-light transition-colors"
-                  onClick={handleDecklistNext}
-                >
-                  Next →
-                </button>
+                <div className="flex gap-3">
+                  <button
+                    className="px-4 py-2 text-sm text-gray-400 hover:text-gray-200 transition-colors"
+                    onClick={onClose}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    className="px-4 py-2 text-sm bg-gold text-black font-semibold rounded hover:bg-gold-light transition-colors"
+                    onClick={handleDecklistNext}
+                  >
+                    Next →
+                  </button>
+                </div>
               </div>
             </>
           )}
