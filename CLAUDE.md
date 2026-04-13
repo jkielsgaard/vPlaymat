@@ -7,8 +7,9 @@ The app version is displayed in the centre of the top menu bar in
 
 **Only bump the version when the codebase changes** (not for README, docs, or test-only changes).
 
-Versioning scheme: **Semantic Versioning — MAJOR.MINOR.PATCH beta**
-(the `beta` label stays until the project is declared stable)
+Versioning scheme: **Semantic Versioning — MAJOR.MINOR.PATCH**
+
+The beta notice banner in the UI is separate from the version number and stays until the project is declared stable.
 
 | Part | Bump when |
 |------|-----------|

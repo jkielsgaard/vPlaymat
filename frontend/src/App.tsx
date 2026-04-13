@@ -15,6 +15,7 @@ const urlParams = new URLSearchParams(window.location.search)
 const IS_OBS = urlParams.get('obs') === '1'
 
 const DISCLAIMER_KEY = 'vmagic-disclaimer-accepted'
+const BETA_DISMISSED_KEY = 'vmagic-beta-dismissed'
 
 export default function App() {
   // OBS mode — render only the arena, no UI chrome
@@ -24,6 +25,13 @@ export default function App() {
   const { settings, updateSettings } = useSettings()
   const [wizardDismissed, setWizardDismissed] = useState(false)
   const [logOpen, setLogOpen] = useState(false)
+  const [betaDismissed, setBetaDismissed] = useState(
+    () => localStorage.getItem(BETA_DISMISSED_KEY) === 'true',
+  )
+  function dismissBeta() {
+    localStorage.setItem(BETA_DISMISSED_KEY, 'true')
+    setBetaDismissed(true)
+  }
 
   // 3.1 — First-time disclaimer
   const [disclaimerAccepted, setDisclaimerAccepted] = useState(
@@ -74,6 +82,30 @@ export default function App() {
         onToggleLog={() => setLogOpen((v) => !v)}
       />
 
+      {/* Beta notice banner */}
+      {!betaDismissed && (
+        <div className="fixed top-12 left-0 right-0 z-20 flex items-center justify-center gap-3 bg-amber-900/80 border-b border-amber-700/50 px-4 py-1.5 text-amber-200 text-xs backdrop-blur-sm">
+          <span>
+            <span className="font-semibold">Beta</span> — vPlaymat is under active development. You may encounter bugs or unexpected behaviour.{' '}
+            <a
+              href="https://github.com/jkielsgaard/vPlaymat/issues"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline hover:text-white"
+            >
+              Report an issue
+            </a>
+          </span>
+          <button
+            aria-label="Dismiss beta notice"
+            className="ml-2 text-amber-400 hover:text-white text-base leading-none"
+            onClick={dismissBeta}
+          >
+            ×
+          </button>
+        </div>
+      )}
+
       {/* 3.4 — Reconnect banner (non-blocking) */}
       {showReconnectBanner && <ReconnectBanner lostAt={disconnectedAt!} />}
 
@@ -93,7 +125,7 @@ export default function App() {
           </div>
         </div>
       ) : (
-        <Playmat gameState={gameState} logOpen={logOpen} onCloseLog={() => setLogOpen(false)} betaBannerVisible={false} />
+        <Playmat gameState={gameState} logOpen={logOpen} onCloseLog={() => setLogOpen(false)} betaBannerVisible={!betaDismissed} />
       )}
 
       {showAutoWizard && (
