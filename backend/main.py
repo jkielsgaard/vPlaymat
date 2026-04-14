@@ -6,15 +6,26 @@ from typing import Optional
 
 logger = logging.getLogger("uvicorn.error")
 
-from fastapi import FastAPI, Query, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, Query, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from slowapi.errors import RateLimitExceeded
 
+from limiter import limiter
 from routers import cards, deck, game
-from state import broadcast_state, flush_loop, get_or_create_session, manager
+from state import broadcast_state, flush_loop, get_or_create_session, manager, _sanitize_session_id
 
-APP_VERSION = "v1.1.1"
+APP_VERSION = "v1.3.0"
 
 app = FastAPI(title="vPlaymat API")
+app.state.limiter = limiter
+app.add_exception_handler(
+    RateLimitExceeded,
+    lambda request, exc: JSONResponse(
+        status_code=429,
+        content={"detail": "Too many deck imports. Please wait 1 minute before trying again."},
+    ),
+)
 
 # ALLOWED_ORIGINS can be overridden via environment variable for production.
 # Multiple origins are comma-separated, e.g. "http://localhost,https://example.com"
@@ -58,7 +69,12 @@ async def websocket_endpoint(
     websocket: WebSocket,
     session_id: Optional[str] = Query(default=None),
 ):
-    sid = session_id or "default"
+    origin = websocket.headers.get("origin", "")
+    if origin and origin not in ALLOWED_ORIGINS:
+        await websocket.close(code=1008)
+        return
+
+    sid = _sanitize_session_id(session_id or "default")
     await manager.connect(websocket, sid)
     state = get_or_create_session(sid)
 

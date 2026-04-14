@@ -8,11 +8,12 @@ interface MenuBarProps {
   settings: Settings
   onUpdateSettings: (partial: Partial<Settings>) => void
   onNewGame: () => void
-  connected: boolean
   onToggleLog: () => void
+  spectatorZoneViewing: boolean
+  onToggleSpectatorZoneViewing: (v: boolean) => void
 }
 
-export function MenuBar({ settings, onUpdateSettings, onNewGame, connected, onToggleLog }: MenuBarProps) {
+export function MenuBar({ settings, onUpdateSettings, onNewGame, onToggleLog, spectatorZoneViewing, onToggleSpectatorZoneViewing }: MenuBarProps) {
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [helpOpen, setHelpOpen] = useState(false)
 
@@ -39,7 +40,7 @@ export function MenuBar({ settings, onUpdateSettings, onNewGame, connected, onTo
 
         {/* Version — centred in the bar */}
         <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2 select-none pointer-events-none">
-          <span className="text-gray-500 text-xs font-mono tracking-widest">v1.1.1</span>
+          <span className="text-gray-500 text-xs font-mono tracking-widest">v1.3.0</span>
           <span className="bg-amber-700/70 text-amber-300 text-[9px] font-bold px-1.5 py-0.5 rounded tracking-wider uppercase">
             BETA
           </span>
@@ -47,14 +48,6 @@ export function MenuBar({ settings, onUpdateSettings, onNewGame, connected, onTo
 
         {/* Spacer */}
         <div className="flex-1" />
-
-        {/* Connection indicator */}
-        <div className="flex items-center gap-1.5 text-xs">
-          <span
-            className={`w-2 h-2 rounded-full ${connected ? 'bg-green-400' : 'bg-red-400 animate-pulse'}`}
-          />
-          <span className="text-gray-400">{connected ? 'connected' : 'reconnecting…'}</span>
-        </div>
       </div>
 
       {settingsOpen && (
@@ -62,6 +55,8 @@ export function MenuBar({ settings, onUpdateSettings, onNewGame, connected, onTo
           settings={settings}
           onUpdate={onUpdateSettings}
           onClose={() => setSettingsOpen(false)}
+          spectatorZoneViewing={spectatorZoneViewing}
+          onToggleSpectatorZoneViewing={onToggleSpectatorZoneViewing}
         />
       )}
 

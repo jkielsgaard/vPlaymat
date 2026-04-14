@@ -2,6 +2,7 @@ import asyncio
 import json
 import logging
 import os
+import re
 from typing import Dict, Optional, Set
 
 from fastapi import WebSocket
@@ -17,13 +18,27 @@ SESSION_DIR = os.getenv("SESSION_DIR", "/app/data/sessions")
 # How often (seconds) a dirty session is flushed to disk.
 _FLUSH_INTERVAL = 5.0
 
+# Only accept session IDs that are valid UUID v4 strings to prevent path traversal.
+_UUID_RE = re.compile(
+    r'^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'
+)
+
+
+def _sanitize_session_id(session_id: str) -> str:
+    """Return the session_id unchanged if it is a valid UUID v4, else return 'default'."""
+    if _UUID_RE.match(session_id.lower()):
+        return session_id.lower()
+    return "default"
+
 
 # ---------------------------------------------------------------------------
 # File persistence helpers
 # ---------------------------------------------------------------------------
 
 def _session_path(session_id: str) -> str:
-    return os.path.join(SESSION_DIR, f"{session_id}.json")
+    # Guard against path traversal — only valid UUID v4 strings are allowed as filenames.
+    safe_id = session_id if _UUID_RE.match(session_id.lower()) else "default"
+    return os.path.join(SESSION_DIR, f"{safe_id}.json")
 
 
 def _ensure_dir() -> None:

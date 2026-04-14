@@ -25,6 +25,11 @@ RUN grep -v 'podman-compose' requirements.txt \
 # Copy backend source
 COPY backend/ .
 
+# Create a non-root user for the backend process
+RUN useradd --system --no-create-home --shell /bin/false appuser \
+    && mkdir -p /app/data/sessions \
+    && chown appuser:appuser /app/data/sessions
+
 # Copy built frontend static files
 COPY --from=frontend-builder /app/dist /var/www/html
 

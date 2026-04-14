@@ -1,8 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { Card, GameState, Zone } from '../../types/game'
 import { useActions } from '../../hooks/useActions'
+import * as api from '../../api/rest'
 import { useGameLog } from '../../hooks/useGameLog'
 import { useSettingsContext } from '../../contexts/SettingsContext'
+import { useToast, ToastDisplay } from '../../contexts/ToastContext'
 import { CardPreview } from '../cards/CardPreview'
 import { ContextMenu } from '../overlays/ContextMenu'
 import { GameLog } from '../overlays/GameLog'
@@ -52,6 +54,7 @@ export function Playmat({ gameState, logOpen, onCloseLog, betaBannerVisible = fa
   const actions = useActions()
   const { settings } = useSettingsContext()
   const { entries, addEntry, clearLog } = useGameLog()
+  const { addToast } = useToast()
 
   const [hoveredCard, setHoveredCard] = useState<Card | null>(null)
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null)
@@ -129,21 +132,25 @@ export function Playmat({ gameState, logOpen, onCloseLog, betaBannerVisible = fa
   function handleDraw(count = 1) {
     actions.drawCards(count)
     addEntry(turn, count === 1 ? 'Drew a card' : `Drew ${count} cards`)
+    addToast(count === 1 ? 'Drew a card' : `Drew ${count} cards`)
   }
 
   function handleShuffle() {
     actions.shuffleLibrary()
     addEntry(turn, 'Shuffled library')
+    addToast('Library shuffled')
   }
 
   function handleNextTurn() {
     actions.nextTurn()
     addEntry(turn + 1, `Turn ${turn + 1} started`)
+    addToast(`Turn ${turn + 1}`)
   }
 
   function handleUntapAll() {
     actions.untapAll()
     addEntry(turn, 'Untapped all cards')
+    addToast('All cards untapped')
     setConfirmUntapAll(false)
   }
 
@@ -321,6 +328,27 @@ export function Playmat({ gameState, logOpen, onCloseLog, betaBannerVisible = fa
     setSelectedIds(new Set())
   }
 
+  // Keyboard shortcuts — use a ref so the effect doesn't re-register on every render
+  const shortcutRef = useRef({ handleDraw, handleNextTurn, handleBulkTap, handleBulkUntap, selectedIds })
+  shortcutRef.current = { handleDraw, handleNextTurn, handleBulkTap, handleBulkUntap, selectedIds }
+
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      const tag = (e.target as HTMLElement).tagName
+      if (['INPUT', 'TEXTAREA', 'SELECT'].includes(tag)) return
+      if ((e.target as HTMLElement).isContentEditable) return
+      const { handleDraw, handleNextTurn, handleBulkTap, handleBulkUntap, selectedIds } = shortcutRef.current
+      switch (e.key.toLowerCase()) {
+        case 'd': e.preventDefault(); handleDraw(1); break
+        case 'n': e.preventDefault(); handleNextTurn(); break
+        case 't': if (selectedIds.size > 0) { e.preventDefault(); handleBulkTap() } break
+        case 'u': if (selectedIds.size > 0) { e.preventDefault(); handleBulkUntap() } break
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [])
+
   // Card preview width — reserved so panels never overlap it
   const previewWidth = Math.round(208 * settings.cardPreviewScale)
   // Panels take the remaining width so the preview column is always visible
@@ -376,6 +404,8 @@ export function Playmat({ gameState, logOpen, onCloseLog, betaBannerVisible = fa
                   cardScale={Math.min(cardScale, (LEFT_COL_W - 24) / 80)}
                   onContextMenu={openContextMenu}
                   onHover={setHoveredCard}
+                  onViewerOpen={() => api.setActiveViewer('graveyard')}
+                  onViewerClose={() => api.setActiveViewer(null)}
                 />
               </div>
               <div className="border-t border-gold/10 mx-2" />
@@ -385,6 +415,8 @@ export function Playmat({ gameState, logOpen, onCloseLog, betaBannerVisible = fa
                   cardScale={Math.min(cardScale, (LEFT_COL_W - 24) / 80)}
                   onContextMenu={openContextMenu}
                   onHover={setHoveredCard}
+                  onViewerOpen={() => api.setActiveViewer('exile')}
+                  onViewerClose={() => api.setActiveViewer(null)}
                 />
               </div>
             </div>
@@ -470,6 +502,9 @@ export function Playmat({ gameState, logOpen, onCloseLog, betaBannerVisible = fa
           {revealOpen && (
             <RevealOverlay libraryCards={libraryCards} onClose={() => setRevealOpen(false)} />
           )}
+
+          {/* Toasts — inside arena so OBS captures them */}
+          <ToastDisplay />
         </div>
         {/* ── End arena ─────────────────────────────────────────────────── */}
 

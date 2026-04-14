@@ -14,7 +14,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 function Row({ label, desc }: { label: string; desc: string }) {
   return (
     <div className="flex gap-2 text-xs mb-1">
-      <span className="text-gray-200 font-medium w-36 shrink-0">{label}</span>
+      <span className="text-gray-200 font-medium w-44 shrink-0">{label}</span>
       <span className="text-gray-400">{desc}</span>
     </div>
   )
@@ -25,11 +25,11 @@ export function HelpPanel({ onClose }: HelpPanelProps) {
     <div
       role="dialog"
       aria-modal="true"
-      className="fixed inset-0 z-50 bg-black/75 flex items-center justify-end"
+      className="fixed inset-0 z-50 bg-black/75 flex items-stretch justify-end"
       onClick={onClose}
     >
       <div
-        className="h-full w-80 bg-mtg-card border-l border-gold/30 p-6 overflow-y-auto flex flex-col gap-6"
+        className="h-screen w-[520px] bg-mtg-card border-l border-gold/30 p-6 overflow-y-auto flex flex-col gap-6"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between">
@@ -111,46 +111,128 @@ export function HelpPanel({ onClose }: HelpPanelProps) {
           <Row label="+ Token" desc="Search Scryfall for a token or build a custom one" />
         </Section>
 
+        <Section title="Keyboard shortcuts">
+          <Row label="D" desc="Draw 1 card" />
+          <Row label="N" desc="Next turn" />
+          <Row label="T" desc="Tap all selected cards (requires a selection)" />
+          <Row label="U" desc="Untap all selected cards (requires a selection)" />
+          <p className="text-xs text-gray-600 mt-1">Shortcuts are disabled while typing in any text field.</p>
+        </Section>
+
         <Section title="Game menu">
           <Row label="New Game" desc="Reset the board (confirmation required)" />
           <Row label="Import New Deck" desc="Load a new deck in MTGA format" />
           <Row label="Game Log" desc="Toggle the action log panel below the arena" />
-          <Row label="Copy OBS URL" desc="Copies a clean arena-only URL for OBS Browser Source — includes your session ID so it mirrors your game live" />
+          <Row label="Copy Spectator URL" desc="Copies a clean arena-only URL — use it as an OBS Browser Source or share it directly with another player so they can watch your board live" />
         </Section>
 
-        <Section title="Streaming with OBS">
+        <Section title="Spectator view">
           <div className="text-xs text-gray-400 leading-relaxed space-y-3">
 
-            <p className="text-gray-300 font-medium">Method 1 — Browser Source (recommended)</p>
-            <ol className="list-decimal list-inside space-y-1 ml-1">
-              <li>Play normally in this browser window</li>
-              <li>Game menu → <strong className="text-gray-200">Copy OBS URL</strong></li>
-              <li>In OBS: add a <strong className="text-gray-200">Browser Source</strong></li>
-              <li>Paste the URL and set <strong className="text-gray-200">Width × Height</strong> to match your arena size in Settings (default 1280 × 720)</li>
-              <li>Click <strong className="text-gray-200">Start Virtual Camera</strong> in OBS</li>
-              <li>Select <strong className="text-gray-200">OBS Virtual Camera</strong> in Spelltable / Discord</li>
-            </ol>
+            <p>
+              Game menu → <strong className="text-gray-200">Copy Spectator URL</strong> gives a clean arena-only view — no menu bar, no hand zone, nothing private.
+              It connects to your active session and updates live.
+            </p>
 
+            <p className="text-gray-300 font-medium">Option 1 — Share your board directly (no OBS needed)</p>
+            <p className="text-[11px]">Each player runs their own vPlaymat session. Share your Spectator URL so others can see your board live in their browser.</p>
+            <ol className="list-decimal list-inside space-y-1 ml-1 text-[11px]">
+              <li>Game menu → <strong className="text-gray-200">Copy Spectator URL</strong></li>
+              <li>Send the URL to your opponent (Discord, chat, etc.)</li>
+              <li>They open it in a browser tab — your battlefield updates live for them</li>
+              <li>Ask them to share their URL back so you can see their board too</li>
+            </ol>
+            <p className="text-[11px]">No Spelltable account, no OBS, no virtual camera needed.</p>
+
+            <p className="text-[11px]">
+              <strong className="text-gray-300">Playing with a full table (2–4 players) —</strong>{' '}
+              Each player shares their Spectator URL with everyone else. Open one browser tab per player to watch all boards at once. Each player controls only their own board privately.
+            </p>
+
+            <p className="text-gray-300 font-medium pt-1">Option 2 — OBS Browser Source (for streaming)</p>
+            <p className="text-[11px]">Use the Spectator URL as an OBS Browser Source to stream your board to Spelltable, Discord, or any platform via a virtual camera.</p>
+            <p className="text-[11px] text-gray-300">Setup (one time):</p>
+            <ol className="list-decimal list-inside space-y-1 ml-1 text-[11px]">
+              <li>Open vPlaymat and import your deck — this is where you play</li>
+              <li>Game menu → <strong className="text-gray-200">Copy Spectator URL</strong></li>
+              <li>In OBS, click <strong className="text-gray-200">+</strong> in the Sources panel and choose <strong className="text-gray-200">Browser</strong></li>
+              <li>Paste the URL and set <strong className="text-gray-200">Width × Height</strong> to match your arena size in Settings (default 1280 × 720)</li>
+              <li>Click OK</li>
+            </ol>
             <p className="text-amber-400/80 text-[11px]">
               ⚠ Width &amp; Height in OBS must exactly match your arena size — if they differ you will see a cropped view or black bars.
             </p>
-
             <p className="text-[11px]">
               <strong className="text-gray-300">Black bar below the battlefield?</strong>{' '}
-              Your OBS canvas is larger than the source. Fix: OBS → Settings → Video → set Base Resolution to <strong className="text-gray-200">1280 × 720</strong>, or right-click the source → <strong className="text-gray-200">Transform → Fit to screen</strong>.
+              OBS → Settings → Video → set Base Resolution to <strong className="text-gray-200">1280 × 720</strong>, or right-click the source → <strong className="text-gray-200">Transform → Fit to screen</strong>.
+            </p>
+            <p className="text-[11px] text-gray-300">Sending to Spelltable / Discord:</p>
+            <ol className="list-decimal list-inside space-y-1 ml-1 text-[11px]" start={6}>
+              <li>In OBS click <strong className="text-gray-200">Start Virtual Camera</strong></li>
+              <li>In Spelltable or Discord, select <strong className="text-gray-200">OBS Virtual Camera</strong> as your camera</li>
+            </ol>
+
+            <p className="text-gray-300 font-medium pt-1">Option 3 — OBS Screen capture (alternative)</p>
+            <ol className="list-decimal list-inside space-y-1 ml-1 text-[11px]">
+              <li>In OBS add a <strong className="text-gray-200">Window Capture</strong> source pointing at this browser window</li>
+              <li>Add a <strong className="text-gray-200">Crop/Pad</strong> filter (right-click source → Filters) to crop to just the arena — cut out the menu bar at the top and everything below the arena border</li>
+              <li>Enable <strong className="text-gray-200">OBS Virtual Camera</strong> and select it in Spelltable / Discord</li>
+            </ol>
+            <ul className="list-disc list-inside space-y-0.5 ml-1 text-[11px]">
+              <li>If you resize the browser window the crop will be off and needs re-adjusting</li>
+              <li>Your browser window must not be hidden behind other windows during play</li>
+            </ul>
+
+            <p className="text-gray-300 font-medium pt-1">General tips</p>
+            <ul className="list-disc list-inside space-y-0.5 ml-1 text-[11px]">
+              <li>The <strong className="text-gray-200">arena size</strong> in Settings (default 1280 × 720) should match your OBS canvas for the cleanest result</li>
+              <li>Everything <strong className="text-gray-200">below the arena</strong> (hand, card preview, buttons) is never visible — it stays private</li>
+              <li>If you change your arena size in Settings, update the Browser Source dimensions in OBS to match</li>
+            </ul>
+
+            <p className="text-gray-300 font-medium pt-1">Zone panel &amp; zone viewer</p>
+            <p className="text-[11px] text-gray-400">
+              The spectator view shows the left-side zone panel — library count, graveyard, and exile — just like the player sees.
+              When you (the player) open the graveyard or exile viewer, the spectator automatically sees the same overlay.
+              They can dismiss it locally by clicking outside; only you can actually close it.
+            </p>
+            <p className="text-[11px] text-gray-400 mt-1">
+              To let spectators browse those zones independently, enable <strong className="text-gray-200">Allow spectators to open graveyard &amp; exile</strong> in Settings → Spectator.
+              When this is on, spectators can open the zone viewer themselves — and your viewer will no longer mirror to them (to avoid two overlapping boxes appearing at once).
             </p>
 
-            <p className="text-gray-300 font-medium pt-1">Method 2 — Screen capture</p>
-            <ol className="list-decimal list-inside space-y-1 ml-1">
-              <li>In OBS add a <strong className="text-gray-200">Window Capture</strong> source pointing at this browser window</li>
-              <li>Add a <strong className="text-gray-200">Crop/Pad</strong> filter (right-click source → Filters) to cut to just the arena — crop out the menu bar at the top and everything below the arena border</li>
-              <li>Enable Virtual Camera and select it in Spelltable / Discord</li>
-            </ol>
-            <p className="text-[11px]">
-              Note: if you resize the browser window the crop will be off and needs re-adjusting.
+            <p className="text-gray-300 font-medium pt-1">Card preview in the spectator view</p>
+            <p className="text-[11px] text-gray-400">
+              Hovering a card shows a large preview in a corner of the screen.
+              Click the <strong className="text-gray-200">⚙</strong> icon in the top-right corner to toggle the preview,
+              adjust its size, or move it to a different corner. Settings are saved per browser.
             </p>
 
           </div>
+        </Section>
+
+        <Section title="About">
+          <p className="text-xs text-gray-500 leading-relaxed">
+            Made by{' '}
+            <a
+              href="https://www.linkedin.com/in/jkielsgaard/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-gold hover:underline"
+            >
+              Jesper Kielsgaard
+            </a>
+            . Source code on{' '}
+            <a
+              href="https://github.com/jkielsgaard/vPlaymat"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-gold hover:underline"
+            >
+              GitHub
+            </a>
+            . Version v1.3.0.
+          </p>
         </Section>
 
         <Section title="Attribution">

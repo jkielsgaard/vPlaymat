@@ -13,18 +13,18 @@ export function GameMenu({ onNewGame, onToggleLog }: GameMenuProps) {
   const [open, setOpen] = useState(false)
   const [confirmNew, setConfirmNew] = useState(false)
   const [showImport, setShowImport] = useState(false)
-  const [obsCopied, setObsCopied] = useState(false)
+  const [spectatorCopied, setSpectatorCopied] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
   const { settings } = useSettingsContext()
 
-  function copyObsUrl() {
+  function copySpectatorUrl() {
     const sessionId = getOrCreateSessionId()
     const { cardScale } = settings
     const base = `${window.location.origin}${window.location.pathname}`
-    const url = `${base}?obs=1&session_id=${encodeURIComponent(sessionId)}&scale=${cardScale}`
+    const url = `${base}?spectate=1&session_id=${encodeURIComponent(sessionId)}&scale=${cardScale}`
     navigator.clipboard.writeText(url).then(() => {
-      setObsCopied(true)
-      setTimeout(() => setObsCopied(false), 2000)
+      setSpectatorCopied(true)
+      setTimeout(() => setSpectatorCopied(false), 2000)
     })
     setOpen(false)
   }
@@ -62,8 +62,8 @@ export function GameMenu({ onNewGame, onToggleLog }: GameMenuProps) {
               Game Log
             </MenuItem>
             <div className="border-t border-gold/10 my-1" />
-            <MenuItem onClick={copyObsUrl}>
-              {obsCopied ? '✓ Copied!' : 'Copy OBS URL'}
+            <MenuItem onClick={copySpectatorUrl}>
+              {spectatorCopied ? '✓ Copied!' : 'Copy Spectator URL'}
             </MenuItem>
           </div>
         )}

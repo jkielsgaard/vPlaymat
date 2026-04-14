@@ -110,3 +110,9 @@ export const transformCard = (cardId: string) =>
 export const resetCommanderReturns = () =>
   request<{ ok: boolean }>('POST', '/game/commander-returns/reset')
 
+export const setActiveViewer = (zone: 'graveyard' | 'exile' | null) =>
+  request<{ ok: boolean }>('POST', '/game/active-viewer', { zone })
+
+export const setSpectatorZoneViewing = (enabled: boolean) =>
+  request<{ ok: boolean }>('POST', '/game/spectator-zone-viewing', { enabled })
+

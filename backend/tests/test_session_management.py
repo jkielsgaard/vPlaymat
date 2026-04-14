@@ -3,7 +3,7 @@ import time
 import pytest
 
 import state as state_module
-from state import get_or_create_session, mark_dirty, _save_session, _load_session
+from state import get_or_create_session, mark_dirty, _save_session, _load_session, _sanitize_session_id
 from models.game_state import GameState
 from tests.conftest import make_card
 
@@ -167,3 +167,34 @@ def test_load_returns_none_for_corrupt_file(tmp_path):
         f.write("not valid json {{{{")
 
     assert _load_session("bad-sess") is None
+
+
+# ---------------------------------------------------------------------------
+# _sanitize_session_id — path traversal prevention
+# ---------------------------------------------------------------------------
+
+def test_valid_uuid_v4_passes_through():
+    sid = "550e8400-e29b-41d4-a716-446655440000"
+    assert _sanitize_session_id(sid) == sid.lower()
+
+
+def test_path_traversal_attempt_falls_back_to_default():
+    assert _sanitize_session_id("../../etc/passwd") == "default"
+
+
+def test_non_uuid_string_falls_back_to_default():
+    assert _sanitize_session_id("not-a-uuid") == "default"
+
+
+def test_empty_string_falls_back_to_default():
+    assert _sanitize_session_id("") == "default"
+
+
+def test_path_traversal_session_id_does_not_write_outside_session_dir(tmp_path):
+    """A crafted session_id must not cause files to be written outside SESSION_DIR."""
+    traversal_id = "../../etc/passwd"
+    get_or_create_session(traversal_id)
+    # The only file written must be inside tmp_path (the mocked SESSION_DIR)
+    written = list(tmp_path.rglob("*.json"))
+    for f in written:
+        assert str(f).startswith(str(tmp_path)), f"File written outside SESSION_DIR: {f}"

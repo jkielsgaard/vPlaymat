@@ -24,6 +24,10 @@ class GameState:
     opponent_names: List[str] = field(default_factory=list)
     poison_counters: int = 0
     commander_returns: int = 0
+    # Spectator sync — which zone viewer the player currently has open (mirrored to spectators)
+    active_viewer: Optional[str] = None  # "graveyard" | "exile" | None
+    # Whether spectators are allowed to open the zone viewer independently
+    spectator_zone_viewing: bool = False
     # Session tracking — not exposed to the frontend via to_dict()
     session_id: Optional[str] = field(default=None, compare=False)
     last_active: float = field(default=0.0, compare=False)  # unix timestamp
@@ -54,6 +58,7 @@ class GameState:
         self.opponent_names = []
         self.poison_counters = 0
         self.commander_returns = 0
+        self.active_viewer = None
 
     # ------------------------------------------------------------------
     # Setup
@@ -90,6 +95,7 @@ class GameState:
         self.turn = 1
         self.poison_counters = 0
         self.commander_returns = 0
+        self.active_viewer = None
         self.shuffle()
         # Restore the commander card to the command zone
         for card in self.cards.values():
@@ -335,6 +341,8 @@ class GameState:
             opponent_names=data.get("opponent_names", []),
             poison_counters=data.get("poison_counters", 0),
             commander_returns=data.get("commander_returns", 0),
+            active_viewer=data.get("active_viewer"),
+            spectator_zone_viewing=data.get("spectator_zone_viewing", False),
             session_id=session_id,
             last_active=data.get("last_active", 0.0),
         )
@@ -354,6 +362,8 @@ class GameState:
             "opponent_names": list(self.opponent_names),
             "poison_counters": self.poison_counters,
             "commander_returns": self.commander_returns,
+            "active_viewer": self.active_viewer,
+            "spectator_zone_viewing": self.spectator_zone_viewing,
         }
 
     def to_persist_dict(self) -> dict:

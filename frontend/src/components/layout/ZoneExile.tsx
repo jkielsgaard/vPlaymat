@@ -10,14 +10,43 @@ interface ZoneExileProps {
   cardScale: number
   onContextMenu: (e: React.MouseEvent, card: Card) => void
   onHover: (card: Card | null) => void
+  // Callbacks so the parent knows when the viewer opens/closes
+  onViewerOpen?: () => void
+  onViewerClose?: () => void
+  // Controlled mode — when provided, overrides internal open state
+  controlledOpen?: boolean
+  // Suppress all click interaction (read-only display)
+  readOnly?: boolean
 }
 
-export function ZoneExile({ cards, cardScale, onContextMenu, onHover }: ZoneExileProps) {
-  const [open, setOpen] = useState(false)
+export function ZoneExile({
+  cards,
+  cardScale,
+  onContextMenu,
+  onHover,
+  onViewerOpen,
+  onViewerClose,
+  controlledOpen,
+  readOnly = false,
+}: ZoneExileProps) {
+  const [internalOpen, setInternalOpen] = useState(false)
   const { settings } = useSettingsContext()
   const top = cards[cards.length - 1] ?? null
   const w = CARD_BASE_W * cardScale
   const h = CARD_BASE_H * cardScale
+
+  const isOpen = controlledOpen !== undefined ? controlledOpen : internalOpen
+
+  function handleOpen() {
+    if (readOnly || cards.length === 0) return
+    if (controlledOpen === undefined) setInternalOpen(true)
+    onViewerOpen?.()
+  }
+
+  function handleClose() {
+    if (controlledOpen === undefined) setInternalOpen(false)
+    onViewerClose?.()
+  }
 
   return (
     <div className="flex flex-col items-center gap-1.5 w-full px-2">
@@ -30,14 +59,16 @@ export function ZoneExile({ cards, cardScale, onContextMenu, onHover }: ZoneExil
       {/* Card preview */}
       <div
         data-testid="exile-zone"
-        className={`rounded-lg overflow-hidden cursor-pointer transition-colors ${
+        className={`rounded-lg overflow-hidden transition-colors ${
+          readOnly ? '' : 'cursor-pointer'
+        } ${
           top
-            ? 'hover:ring-1 hover:ring-gold/40'
+            ? (!readOnly ? 'hover:ring-1 hover:ring-gold/40' : '')
             : 'border border-dashed border-gold/20 flex items-center justify-center'
         }`}
         style={{ width: w, height: h }}
-        onClick={() => cards.length > 0 && setOpen(true)}
-        title={cards.length > 0 ? 'Click to view exile' : 'Exile is empty'}
+        onClick={handleOpen}
+        title={readOnly ? undefined : cards.length > 0 ? 'Click to view exile' : 'Exile is empty'}
       >
         {top ? (
           <CardView
@@ -60,14 +91,15 @@ export function ZoneExile({ cards, cardScale, onContextMenu, onHover }: ZoneExil
         </span>
       )}
 
-      {open && (
+      {isOpen && (
         <ZoneViewer
           title="Exile"
           cards={cards}
           cardScale={settings.zoneViewerCardScale}
-          onContextMenu={onContextMenu}
+          onContextMenu={readOnly ? () => {} : onContextMenu}
           onHover={onHover}
-          onClose={() => setOpen(false)}
+          onClose={handleClose}
+          readOnly={readOnly}
         />
       )}
     </div>

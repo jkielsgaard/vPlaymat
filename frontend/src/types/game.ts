@@ -30,4 +30,6 @@ export interface GameState {
   opponent_names: string[]
   poison_counters: number
   commander_returns: number
+  active_viewer: 'graveyard' | 'exile' | null
+  spectator_zone_viewing: boolean
 }

@@ -11,9 +11,10 @@ interface ZoneViewerProps {
   onContextMenu: (e: React.MouseEvent, card: Card) => void
   onHover: (card: Card | null) => void
   onClose: () => void
+  readOnly?: boolean
 }
 
-export function ZoneViewer({ title, cards, cardScale, onContextMenu, onHover, onClose }: ZoneViewerProps) {
+export function ZoneViewer({ title, cards, cardScale, onContextMenu, onHover, onClose, readOnly = false }: ZoneViewerProps) {
   const cardW = CARD_BASE_W * cardScale
   const cardH = CARD_BASE_H * cardScale
 
@@ -84,9 +85,11 @@ export function ZoneViewer({ title, cards, cardScale, onContextMenu, onHover, on
             )}
           </div>
 
-          <p className="text-gray-500 text-xs mt-3 shrink-0">
-            Right-click a card to move it · Esc or click outside to close
-          </p>
+          {!readOnly && (
+            <p className="text-gray-500 text-xs mt-3 shrink-0">
+              Right-click a card to move it · Esc or click outside to close
+            </p>
+          )}
         </div>
       </div>
     </div>,

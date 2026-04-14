@@ -4,22 +4,24 @@ import { useSettings } from './hooks/useSettings'
 import { SettingsContext } from './contexts/SettingsContext'
 import { MenuBar } from './components/menu/MenuBar'
 import { Playmat } from './components/layout/Playmat'
-import { OBSView } from './components/layout/OBSView'
+import { SpectatorView } from './components/layout/OBSView'
 import { StartGameWizard } from './components/ui/StartGameWizard'
 import { DisclaimerModal } from './components/overlays/DisclaimerModal'
-import { ReconnectBanner } from './components/overlays/ReconnectBanner'
+import { ConnectionOverlay } from './components/overlays/ConnectionOverlay'
+import { MobileWarning } from './components/overlays/MobileWarning'
+import { ToastProvider } from './contexts/ToastContext'
 import * as api from './api/rest'
 
-// Detect OBS mode — ?obs=1 in the URL
+// Detect spectator mode — ?spectate=1 (or legacy ?obs=1) in the URL
 const urlParams = new URLSearchParams(window.location.search)
-const IS_OBS = urlParams.get('obs') === '1'
+const IS_SPECTATOR = urlParams.get('spectate') === '1' || urlParams.get('obs') === '1'
 
 const DISCLAIMER_KEY = 'vmagic-disclaimer-accepted'
 const BETA_DISMISSED_KEY = 'vmagic-beta-dismissed'
 
 export default function App() {
-  // OBS mode — render only the arena, no UI chrome
-  if (IS_OBS) return <OBSView />
+  // Spectator mode — render only the arena, no UI chrome
+  if (IS_SPECTATOR) return <SpectatorView />
 
   const { gameState, connected } = useBoard()
   const { settings, updateSettings } = useSettings()
@@ -62,24 +64,35 @@ export default function App() {
     await api.newGame()
   }
 
+  async function handleToggleSpectatorZoneViewing(v: boolean) {
+    await api.setSpectatorZoneViewing(v)
+  }
+
   // Show the wizard automatically when the app loads and no deck has been imported yet
   const hasNoDeck = gameState !== null && Object.keys(gameState.cards).length === 0
   const showAutoWizard = connected && hasNoDeck && !wizardDismissed
 
-  // 3.4 — Show reconnect banner when we have a game state but lost connection
-  const showReconnectBanner = !connected && gameState !== null && disconnectedAt !== null
-
   return (
+    <ToastProvider>
     <SettingsContext.Provider value={{ settings, updateSettings }}>
       {/* 3.1 — Disclaimer shown once on first visit */}
       {!disclaimerAccepted && <DisclaimerModal onAccept={acceptDisclaimer} />}
+
+      <MobileWarning />
+
+      <ConnectionOverlay
+        connected={connected}
+        hasGameState={gameState !== null}
+        lostAt={disconnectedAt}
+      />
 
       <MenuBar
         settings={settings}
         onUpdateSettings={updateSettings}
         onNewGame={handleNewGame}
-        connected={connected}
         onToggleLog={() => setLogOpen((v) => !v)}
+        spectatorZoneViewing={gameState?.spectator_zone_viewing ?? false}
+        onToggleSpectatorZoneViewing={handleToggleSpectatorZoneViewing}
       />
 
       {/* Beta notice banner */}
@@ -106,9 +119,6 @@ export default function App() {
         </div>
       )}
 
-      {/* 3.4 — Reconnect banner (non-blocking) */}
-      {showReconnectBanner && <ReconnectBanner lostAt={disconnectedAt!} />}
-
       {!gameState ? (
         <div
           className="flex items-center justify-center"
@@ -132,5 +142,6 @@ export default function App() {
         <StartGameWizard onClose={() => setWizardDismissed(true)} />
       )}
     </SettingsContext.Provider>
+    </ToastProvider>
   )
 }

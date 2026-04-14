@@ -65,17 +65,22 @@ A Magic: The Gathering virtual playmat for personal use during online play (Spel
 - **Commander return counter** — tracks how many times your commander returned to the command zone (shows current tax cost); resets with one click
 - Commander card scale and positioning options
 
-### Stream / OBS
-- Fixed-size arena — set width & height in Settings to match your OBS scene
-- Everything below the arena is private (not captured by OBS)
-- Card hover preview lives outside the arena in a dedicated column
+### Spectator view
+- **Copy Spectator URL** (Game menu) generates a clean arena-only URL tied to your session
+- Use it as an **OBS Browser Source** to stream to Spelltable, Discord, or any platform
+- Or **share it directly** with another player — they open it in their browser and see your board live, no OBS or Spelltable account needed
+- Spectator view shows the left-side zone panel: library count, graveyard, and exile
+- When the player opens the graveyard or exile viewer, the spectator sees the same overlay automatically
+- **Allow spectators to open graveyard & exile** (Settings → Spectator) — when enabled, spectators can browse those zones independently; the player's viewer is then not mirrored to avoid showing two overlapping boxes
+- Hover card preview in the spectator view — hover any card to see it enlarged in a corner; click **⚙** (top-right) to toggle, resize, or reposition it
+- Everything below the arena is private (hand, card preview, buttons are never shown)
 - Arena background colour is configurable
 
 ### Session management
 - Session persists across tab close/reopen (same browser)
 - Incognito window = fresh session
 - Game state cached to localStorage — survives backend restarts
-- Auto-reconnect banner on WebSocket drop
+- Blocking overlay on connection loss — shows automatically when the server is unreachable and disappears when reconnected
 
 ### Settings
 - Arena size (width × height)
@@ -88,6 +93,7 @@ A Magic: The Gathering virtual playmat for personal use during online play (Spel
 - Attachment gap (diagonal offset for attached cards, 20–60 px)
 - Tapped card amber tint toggle
 - Arena and page background colours
+- **Spectator — Allow spectators to open graveyard & exile** (synced to session, readable by spectators)
 
 ---
 
@@ -128,22 +134,41 @@ docker compose -f docker-compose.prod.yml up --build
 
 Open **http://localhost:8080** in your browser.
 
-### Streaming with OBS
+### Spectator view
 
-You play vPlaymat in your browser as normal. OBS captures a clean view of the arena and sends it to your opponents via a virtual camera in Spelltable, Discord, or any other platform.
+The **Spectator URL** (Game menu → **Copy Spectator URL**) gives a clean arena-only view — no menu bar, no hand zone, nothing private. It connects to your active session and updates live.
 
-There are two capture methods — pick whichever suits you.
+You can use it in two ways.
 
 ---
 
-#### Method 1 — OBS Browser Source (recommended)
+#### Option 1 — Share your board directly (no OBS needed)
 
-vPlaymat has a built-in clean OBS view: no menu bar, no hand zone, nothing private. It connects to your active game session and updates live.
+Each player runs their own vPlaymat session. Share your Spectator URL so others can see your board live in their browser.
+
+1. Game menu → **Copy Spectator URL**
+2. Send the URL to your opponent (Discord, chat, etc.)
+3. They open it in a browser tab — your battlefield updates live for them
+4. Ask them to share their URL back so you can see their board too
+
+No Spelltable account, no OBS, no virtual camera needed.
+
+**Playing with a full table (2–4 players)**
+
+Each player shares their Spectator URL with everyone else. Open one browser tab per player to watch all boards at once. Each player controls only their own board privately.
+
+The spectator view has a built-in card hover preview — hover any card to see it enlarged in a corner. Click **⚙** in the top-right of the spectator view to toggle it, change the size, or move it to a different corner.
+
+---
+
+#### Option 2 — OBS Browser Source (for streaming)
+
+Use the Spectator URL as an OBS Browser Source to stream your board to Spelltable, Discord, or any platform via a virtual camera.
 
 **Setup (one time):**
 
 1. Open vPlaymat in your browser and import your deck — this is where you play
-2. Open the **Game** menu and click **Copy OBS URL**
+2. Open the **Game** menu and click **Copy Spectator URL**
 3. In OBS, click **+** in the Sources panel and choose **Browser**
 4. Paste the copied URL as the URL
 5. Set **Width** and **Height** to match your arena size in Settings (default **1280 × 720**)
@@ -162,7 +187,7 @@ Your OBS scene canvas is larger than your browser source. Fix with one of these:
 
 ---
 
-#### Method 2 — Screen capture
+#### Option 3 — OBS Screen capture (alternative)
 
 If you prefer not to use the Browser Source, you can capture your browser window directly.
 
@@ -181,7 +206,7 @@ If you prefer not to use the Browser Source, you can capture your browser window
 #### General tips
 
 - The **arena size** in vPlaymat Settings (default 1280 × 720) should match your OBS canvas and your stream output resolution for the cleanest result
-- Everything **below the arena** (hand, card preview, buttons) is never visible in either capture method — it stays private
+- Everything **below the arena** (hand, card preview, buttons) is never visible — it stays private
 - If you change your arena size in Settings, update the Browser Source dimensions in OBS to match
 
 ---

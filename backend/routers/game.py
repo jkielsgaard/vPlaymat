@@ -29,6 +29,14 @@ class CommanderDamageRequest(BaseModel):
     amount: int
 
 
+class ActiveViewerRequest(BaseModel):
+    zone: str | None = None  # "graveyard" | "exile" | None
+
+
+class SpectatorZoneViewingRequest(BaseModel):
+    enabled: bool
+
+
 @router.post("/draw")
 async def draw(request: DrawRequest, session_id: str = Query(default="")):
     gs = get_or_create_session(session_id or "default")
@@ -164,6 +172,22 @@ async def create_token(request: CreateTokenRequest, session_id: str = Query(defa
     )
     await broadcast_state(session_id or "default")
     return token.to_dict()
+
+
+@router.post("/active-viewer")
+async def set_active_viewer(request: ActiveViewerRequest, session_id: str = Query(default="")):
+    gs = get_or_create_session(session_id or "default")
+    gs.active_viewer = request.zone
+    await broadcast_state(session_id or "default")
+    return {"ok": True}
+
+
+@router.post("/spectator-zone-viewing")
+async def set_spectator_zone_viewing(request: SpectatorZoneViewingRequest, session_id: str = Query(default="")):
+    gs = get_or_create_session(session_id or "default")
+    gs.spectator_zone_viewing = request.enabled
+    await broadcast_state(session_id or "default")
+    return {"ok": True}
 
 
 @router.post("/commander-damage")

@@ -21,6 +21,7 @@ interface ZoneBattlefieldProps {
   onGroupMoved: (groupIds: string[]) => void
   cardScale: number
   cardZOrder: string[]
+  readOnly?: boolean
 }
 
 export function ZoneBattlefield({
@@ -36,6 +37,7 @@ export function ZoneBattlefield({
   onGroupMoved,
   cardScale,
   cardZOrder,
+  readOnly = false,
 }: ZoneBattlefieldProps) {
   const { settings } = useSettingsContext()
   const badgeFontSize = Math.round(9 * settings.counterBadgeScale)
@@ -298,7 +300,7 @@ export function ZoneBattlefield({
             )}
 
             {/* Hover toolbar — pointer-events on buttons only so the container doesn't block cards beneath */}
-            {isHovered && (
+            {isHovered && !readOnly && (
               <div
                 className="absolute bottom-0 left-0 right-0 flex items-center justify-around px-1 py-0.5 bg-black/70 rounded-b-lg z-20 pointer-events-none"
                 onMouseDown={(e) => e.stopPropagation()}

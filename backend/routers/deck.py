@@ -1,12 +1,13 @@
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Request
 from pydantic import BaseModel
 
 from models.card import Card
 from services.deck_parser import parse_decklist
 from services.scryfall import get_cards_batch
 from state import broadcast_state, get_or_create_session
+from limiter import limiter
 
 router = APIRouter()
 
@@ -22,12 +23,13 @@ class DeckImportRequest(BaseModel):
 
 
 @router.post("/import")
-async def import_deck(request: DeckImportRequest, session_id: str = Query(default="")):
+@limiter.limit("5/minute")
+async def import_deck(request: Request, body: DeckImportRequest, session_id: str = Query(default="")):
     sid = session_id or "default"
-    if request.game_mode not in VALID_MODES:
-        raise HTTPException(status_code=422, detail=f"Invalid game mode: {request.game_mode}")
+    if body.game_mode not in VALID_MODES:
+        raise HTTPException(status_code=422, detail=f"Invalid game mode: {body.game_mode}")
 
-    parsed = parse_decklist(request.decklist)
+    parsed = parse_decklist(body.decklist)
     if not parsed:
         raise HTTPException(status_code=422, detail="No valid cards found in decklist")
 
@@ -62,11 +64,11 @@ async def import_deck(request: DeckImportRequest, session_id: str = Query(defaul
         )
 
     gs = get_or_create_session(sid)
-    gs.game_mode = request.game_mode
-    gs.opponent_count = request.opponent_count
+    gs.game_mode = body.game_mode
+    gs.opponent_count = body.opponent_count
 
-    names = list(request.opponent_names[: request.opponent_count])
-    while len(names) < request.opponent_count:
+    names = list(body.opponent_names[: body.opponent_count])
+    while len(names) < body.opponent_count:
         names.append(f"Opponent {len(names) + 1}")
     gs.opponent_names = names
 
@@ -74,9 +76,9 @@ async def import_deck(request: DeckImportRequest, session_id: str = Query(defaul
     gs.shuffle()
     gs.draw(7)
 
-    if request.commander_name:
+    if body.commander_name:
         for card in gs.cards.values():
-            if card.name.lower() == request.commander_name.lower():
+            if card.name.lower() == body.commander_name.lower():
                 card.zone = "command"
                 card.is_commander = True
                 if card.id in gs.library_order:

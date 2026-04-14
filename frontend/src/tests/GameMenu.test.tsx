@@ -56,7 +56,7 @@ describe('GameMenu', () => {
   })
 })
 
-describe('GameMenu — Copy OBS URL', () => {
+describe('GameMenu — Copy Spectator URL', () => {
   let writeText: ReturnType<typeof vi.fn>
 
   beforeEach(() => {
@@ -69,20 +69,20 @@ describe('GameMenu — Copy OBS URL', () => {
     })
   })
 
-  it('shows "Copy OBS URL" in the dropdown', async () => {
+  it('shows "Copy Spectator URL" in the dropdown', async () => {
     render(<GameMenu onNewGame={vi.fn()} onToggleLog={vi.fn()} />)
     await userEvent.click(screen.getByRole('button', { name: /game/i }))
-    expect(screen.getByText(/copy obs url/i)).toBeInTheDocument()
+    expect(screen.getByText(/copy spectator url/i)).toBeInTheDocument()
   })
 
-  it('copies a URL with obs=1, session_id, and scale to the clipboard', async () => {
+  it('copies a URL with spectate=1, session_id, and scale to the clipboard', async () => {
     render(<GameMenu onNewGame={vi.fn()} onToggleLog={vi.fn()} />)
     await userEvent.click(screen.getByRole('button', { name: /game/i }))
-    await userEvent.click(screen.getByText(/copy obs url/i))
+    await userEvent.click(screen.getByText(/copy spectator url/i))
 
     expect(writeText).toHaveBeenCalledTimes(1)
     const url = writeText.mock.calls[0][0] as string
-    expect(url).toContain('obs=1')
+    expect(url).toContain('spectate=1')
     expect(url).toContain('session_id=')
     expect(url).toContain('scale=')
   })
@@ -90,7 +90,7 @@ describe('GameMenu — Copy OBS URL', () => {
   it('closes the dropdown after copying', async () => {
     render(<GameMenu onNewGame={vi.fn()} onToggleLog={vi.fn()} />)
     await userEvent.click(screen.getByRole('button', { name: /game/i }))
-    await userEvent.click(screen.getByText(/copy obs url/i))
+    await userEvent.click(screen.getByText(/copy spectator url/i))
 
     await waitFor(() => expect(screen.queryByText(/import new deck/i)).not.toBeInTheDocument())
   })
