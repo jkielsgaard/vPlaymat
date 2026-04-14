@@ -71,6 +71,7 @@ async def websocket_endpoint(
 ):
     origin = websocket.headers.get("origin", "")
     if origin and origin not in ALLOWED_ORIGINS:
+        logger.warning("WebSocket rejected — origin=%r not in ALLOWED_ORIGINS=%r", origin, ALLOWED_ORIGINS)
         await websocket.close(code=1008)
         return
 
