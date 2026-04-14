@@ -15,7 +15,7 @@ from limiter import limiter
 from routers import cards, deck, game
 from state import broadcast_state, flush_loop, get_or_create_session, manager, _sanitize_session_id
 
-APP_VERSION = "v1.4.0"
+APP_VERSION = "v1.4.2"
 
 app = FastAPI(title="vPlaymat API")
 app.state.limiter = limiter

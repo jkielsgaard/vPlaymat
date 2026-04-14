@@ -1,5 +1,7 @@
 # vPlaymat — MTG Virtual Playmat
 
+![vPlaymat](docs/images/og-image.png)
+
 A Magic: The Gathering virtual playmat for personal use during online play (Spelltable, Discord, etc.). Stream it via OBS Browser Source instead of a physical webcam — your opponent sees a clean digital board while you control everything privately.
 
 **No account needed. Free to use.**

@@ -27,13 +27,14 @@ const DEMO_DECK = `1 Nahiri, the Lithomancer (CMM) 45
 
 interface StartGameWizardProps {
   onClose: () => void
+  showWelcome?: boolean
 }
 
-type Step = 'decklist' | 'mode' | 'commander'
+type Step = 'welcome' | 'decklist' | 'mode' | 'commander'
 type GameMode = 'normal' | 'commander'
 
-export function StartGameWizard({ onClose }: StartGameWizardProps) {
-  const [step, setStep] = useState<Step>('decklist')
+export function StartGameWizard({ onClose, showWelcome = false }: StartGameWizardProps) {
+  const [step, setStep] = useState<Step>(showWelcome ? 'welcome' : 'decklist')
   const [decklist, setDecklist] = useState('')
   const [gameMode, setGameMode] = useState<GameMode>('normal')
   const [commanderName, setCommanderName] = useState('')
@@ -111,9 +112,74 @@ export function StartGameWizard({ onClose }: StartGameWizardProps) {
         onClick={loading ? undefined : onClose}
       >
         <div
-          className="bg-mtg-card border border-gold/40 rounded-xl p-6 w-[520px] max-w-full"
+          className="bg-mtg-card border border-gold/40 rounded-xl w-[620px] max-w-full overflow-hidden"
           onClick={(e) => e.stopPropagation()}
         >
+          {step === 'welcome' ? (
+            <>
+              <img
+                src="/og-image.png"
+                alt="vPlaymat"
+                className="w-full object-cover"
+                style={{ maxHeight: 220 }}
+              />
+              <div className="p-6 flex flex-col gap-4">
+                <div>
+                  <h2 className="text-gold font-bold text-2xl mb-1">Welcome to vPlaymat</h2>
+                  <p className="text-gray-500 text-xs">MTG Virtual Playmat — please read before continuing</p>
+                </div>
+
+                <ul className="text-gray-400 text-xs space-y-1">
+                  <li>– Drag &amp; drop cards freely on the battlefield</li>
+                  <li>– Track life, counters, and commander damage</li>
+                  <li>– Share a Spectator URL with opponents or use it as an OBS Browser Source for Spelltable</li>
+                  <li>– No account needed, free to use</li>
+                </ul>
+
+                <div className="space-y-3 text-xs text-gray-400 leading-relaxed border-t border-gold/10 pt-4">
+                  <p>
+                    vPlaymat is a personal, non-commercial tool for use during online Magic: The Gathering games.
+                    It is not affiliated with, endorsed by, or connected to Wizards of the Coast.
+                  </p>
+                  <p>
+                    Magic: The Gathering, its card names, and all related IP are trademarks of{' '}
+                    <strong className="text-gray-200">Wizards of the Coast LLC</strong>.
+                    Card images and data are provided by{' '}
+                    <strong className="text-gray-200">Scryfall</strong> under their{' '}
+                    <a
+                      href="https://scryfall.com/docs/api"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-gold hover:underline"
+                    >
+                      API terms
+                    </a>
+                    . This application is non-commercial and makes no claim of ownership over any card artwork.
+                  </p>
+                  <p>
+                    By using vPlaymat you confirm you own or have the right to use the cards you import, and that
+                    you will use the application only for personal, non-commercial play.
+                  </p>
+                </div>
+
+                <div className="flex justify-between items-center pt-2">
+                  <button
+                    className="px-4 py-2 text-sm text-gray-500 hover:text-gray-300 transition-colors"
+                    onClick={onClose}
+                  >
+                    Skip for now
+                  </button>
+                  <button
+                    className="px-5 py-2 text-sm bg-gold text-black font-semibold rounded hover:bg-gold-light transition-colors"
+                    onClick={() => setStep('decklist')}
+                  >
+                    I understand — let me play →
+                  </button>
+                </div>
+              </div>
+            </>
+          ) : (
+          <div className="p-6">
           <h2 className="text-gold font-semibold text-lg mb-1">Import New Deck</h2>
           <p className="text-gray-500 text-xs mb-4">
             Step {step === 'decklist' ? 1 : step === 'mode' ? 2 : 3} of {gameMode === 'commander' || step === 'commander' ? 3 : 2}
@@ -281,6 +347,8 @@ export function StartGameWizard({ onClose }: StartGameWizardProps) {
                 </button>
               </div>
             </>
+          )}
+          </div>
           )}
         </div>
       </div>

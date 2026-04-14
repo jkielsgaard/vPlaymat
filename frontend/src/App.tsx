@@ -6,7 +6,6 @@ import { MenuBar } from './components/menu/MenuBar'
 import { Playmat } from './components/layout/Playmat'
 import { SpectatorView } from './components/layout/OBSView'
 import { StartGameWizard } from './components/ui/StartGameWizard'
-import { DisclaimerModal } from './components/overlays/DisclaimerModal'
 import { ConnectionOverlay } from './components/overlays/ConnectionOverlay'
 import { MobileWarning } from './components/overlays/MobileWarning'
 import { ToastProvider } from './contexts/ToastContext'
@@ -16,7 +15,6 @@ import * as api from './api/rest'
 const urlParams = new URLSearchParams(window.location.search)
 const IS_SPECTATOR = urlParams.get('spectate') === '1' || urlParams.get('obs') === '1'
 
-const DISCLAIMER_KEY = 'vmagic-disclaimer-accepted'
 const BETA_DISMISSED_KEY = 'vmagic-beta-dismissed'
 
 export default function App() {
@@ -35,16 +33,7 @@ export default function App() {
     setBetaDismissed(true)
   }
 
-  // 3.1 — First-time disclaimer
-  const [disclaimerAccepted, setDisclaimerAccepted] = useState(
-    () => localStorage.getItem(DISCLAIMER_KEY) === 'true',
-  )
-  function acceptDisclaimer() {
-    localStorage.setItem(DISCLAIMER_KEY, 'true')
-    setDisclaimerAccepted(true)
-  }
-
-  // 3.4 — Track when connection was lost so the banner can show elapsed time
+  // Track when connection was lost so the banner can show elapsed time
   const disconnectedAtRef = useRef<number | null>(null)
   const [disconnectedAt, setDisconnectedAt] = useState<number | null>(null)
   useEffect(() => {
@@ -62,6 +51,7 @@ export default function App() {
 
   async function handleNewGame() {
     await api.newGame()
+    setWizardDismissed(false)
   }
 
   async function handleToggleSpectatorZoneViewing(v: boolean) {
@@ -75,9 +65,6 @@ export default function App() {
   return (
     <ToastProvider>
     <SettingsContext.Provider value={{ settings, updateSettings }}>
-      {/* 3.1 — Disclaimer shown once on first visit */}
-      {!disclaimerAccepted && <DisclaimerModal onAccept={acceptDisclaimer} />}
-
       <MobileWarning />
 
       <ConnectionOverlay
@@ -139,7 +126,7 @@ export default function App() {
       )}
 
       {showAutoWizard && (
-        <StartGameWizard onClose={() => setWizardDismissed(true)} />
+        <StartGameWizard onClose={() => setWizardDismissed(true)} showWelcome />
       )}
     </SettingsContext.Provider>
     </ToastProvider>

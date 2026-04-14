@@ -49,6 +49,19 @@ export function ReleaseNotesPanel({ onClose }: ReleaseNotesPanelProps) {
             </button>
           </div>
 
+          <Version version="v1.4.2" date="April 2026">
+            <Item>Welcome wizard now re-appears after starting a new game</Item>
+            <Item>OG image added as a visual header in the import wizard</Item>
+          </Version>
+
+          <div className="border-t border-gold/10" />
+
+          <Version version="v1.4.1" date="April 2026">
+            <Item>SEO improvements — page title, meta description, Open Graph and Twitter Card tags, favicon, robots.txt, and sitemap</Item>
+          </Version>
+
+          <div className="border-t border-gold/10" />
+
           <Version version="v1.4.0" date="April 2026">
             <Item>Release Notes panel added to the Game menu</Item>
           </Version>
