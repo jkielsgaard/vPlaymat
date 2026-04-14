@@ -24,11 +24,12 @@ Rules:
 Steps:
 1. Look at the current version string in `MenuBar.tsx` (search for `v`).
 2. Decide which part to bump based on the nature of the change.
-3. Update the string in **both** of these files before finishing the task:
+3. Update the string in **all three** of these files before finishing the task:
    - `frontend/src/components/menu/MenuBar.tsx` — the version shown in the UI
    - `backend/main.py` — `APP_VERSION` constant (shown in the startup log)
+   - `frontend/src/components/menu/ReleaseNotesPanel.tsx` — add a new section at the top with the new version and a short bullet list of what changed
 
-Both files must always show the same version.
+All three files must always reflect the same version.
 
 ## End-of-task summary (REQUIRED)
 

@@ -231,7 +231,7 @@ export function HelpPanel({ onClose }: HelpPanelProps) {
             >
               GitHub
             </a>
-            . Version v1.3.0.
+            . Version v1.4.0.
           </p>
         </Section>
 

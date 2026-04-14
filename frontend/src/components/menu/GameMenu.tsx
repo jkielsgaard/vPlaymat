@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Portal } from '../ui/Portal'
 import { StartGameWizard } from '../ui/StartGameWizard'
+import { ReleaseNotesPanel } from './ReleaseNotesPanel'
 import { useSettingsContext } from '../../contexts/SettingsContext'
 import { getOrCreateSessionId } from '../../hooks/useSession'
 
@@ -14,6 +15,7 @@ export function GameMenu({ onNewGame, onToggleLog }: GameMenuProps) {
   const [confirmNew, setConfirmNew] = useState(false)
   const [showImport, setShowImport] = useState(false)
   const [spectatorCopied, setSpectatorCopied] = useState(false)
+  const [releaseNotesOpen, setReleaseNotesOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
   const { settings } = useSettingsContext()
 
@@ -65,6 +67,10 @@ export function GameMenu({ onNewGame, onToggleLog }: GameMenuProps) {
             <MenuItem onClick={copySpectatorUrl}>
               {spectatorCopied ? '✓ Copied!' : 'Copy Spectator URL'}
             </MenuItem>
+            <div className="border-t border-gold/10 my-1" />
+            <MenuItem onClick={() => { setOpen(false); setReleaseNotesOpen(true) }}>
+              Release Notes
+            </MenuItem>
           </div>
         )}
       </div>
@@ -96,6 +102,10 @@ export function GameMenu({ onNewGame, onToggleLog }: GameMenuProps) {
 
       {showImport && (
         <StartGameWizard onClose={() => setShowImport(false)} />
+      )}
+
+      {releaseNotesOpen && (
+        <ReleaseNotesPanel onClose={() => setReleaseNotesOpen(false)} />
       )}
     </>
   )
