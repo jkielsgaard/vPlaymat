@@ -109,7 +109,7 @@ export function StartGameWizard({ onClose, showWelcome = false }: StartGameWizar
         role="dialog"
         aria-modal="true"
         className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center"
-        onClick={loading ? undefined : onClose}
+        onClick={loading || showWelcome ? undefined : onClose}
       >
         <div
           className="bg-mtg-card border border-gold/40 rounded-xl w-[620px] max-w-full overflow-hidden"
@@ -162,13 +162,7 @@ export function StartGameWizard({ onClose, showWelcome = false }: StartGameWizar
                   </p>
                 </div>
 
-                <div className="flex justify-between items-center pt-2">
-                  <button
-                    className="px-4 py-2 text-sm text-gray-500 hover:text-gray-300 transition-colors"
-                    onClick={onClose}
-                  >
-                    Skip for now
-                  </button>
+                <div className="flex justify-end items-center pt-2">
                   <button
                     className="px-5 py-2 text-sm bg-gold text-black font-semibold rounded hover:bg-gold-light transition-colors"
                     onClick={() => setStep('decklist')}
@@ -204,12 +198,14 @@ export function StartGameWizard({ onClose, showWelcome = false }: StartGameWizar
                   Try demo deck
                 </button>
                 <div className="flex gap-3">
-                  <button
-                    className="px-4 py-2 text-sm text-gray-400 hover:text-gray-200 transition-colors"
-                    onClick={onClose}
-                  >
-                    Cancel
-                  </button>
+                  {!showWelcome && (
+                    <button
+                      className="px-4 py-2 text-sm text-gray-400 hover:text-gray-200 transition-colors"
+                      onClick={onClose}
+                    >
+                      Cancel
+                    </button>
+                  )}
                   <button
                     className="px-4 py-2 text-sm bg-gold text-black font-semibold rounded hover:bg-gold-light transition-colors"
                     onClick={handleDecklistNext}
@@ -264,13 +260,24 @@ export function StartGameWizard({ onClose, showWelcome = false }: StartGameWizar
                 >
                   ← Back
                 </button>
-                <button
-                  className="px-4 py-2 text-sm bg-gold text-black font-semibold rounded hover:bg-gold-light transition-colors disabled:opacity-50"
-                  onClick={handleModeNext}
-                  disabled={loading}
-                >
-                  {gameMode === 'normal' ? (loading ? 'Importing…' : 'Import & Start') : 'Next →'}
-                </button>
+                <div className="flex gap-3">
+                  {!showWelcome && (
+                    <button
+                      className="px-4 py-2 text-sm text-gray-400 hover:text-gray-200 transition-colors"
+                      onClick={onClose}
+                      disabled={loading}
+                    >
+                      Cancel
+                    </button>
+                  )}
+                  <button
+                    className="px-4 py-2 text-sm bg-gold text-black font-semibold rounded hover:bg-gold-light transition-colors disabled:opacity-50"
+                    onClick={handleModeNext}
+                    disabled={loading}
+                  >
+                    {gameMode === 'normal' ? (loading ? 'Importing…' : 'Import & Start') : 'Next →'}
+                  </button>
+                </div>
               </div>
             </>
           )}
@@ -338,13 +345,24 @@ export function StartGameWizard({ onClose, showWelcome = false }: StartGameWizar
                 >
                   ← Back
                 </button>
-                <button
-                  className="px-4 py-2 text-sm bg-gold text-black font-semibold rounded hover:bg-gold-light transition-colors disabled:opacity-50"
-                  onClick={handleSubmit}
-                  disabled={loading}
-                >
-                  {loading ? 'Importing…' : 'Import & Start'}
-                </button>
+                <div className="flex gap-3">
+                  {!showWelcome && (
+                    <button
+                      className="px-4 py-2 text-sm text-gray-400 hover:text-gray-200 transition-colors"
+                      onClick={onClose}
+                      disabled={loading}
+                    >
+                      Cancel
+                    </button>
+                  )}
+                  <button
+                    className="px-4 py-2 text-sm bg-gold text-black font-semibold rounded hover:bg-gold-light transition-colors disabled:opacity-50"
+                    onClick={handleSubmit}
+                    disabled={loading}
+                  >
+                    {loading ? 'Importing…' : 'Import & Start'}
+                  </button>
+                </div>
               </div>
             </>
           )}

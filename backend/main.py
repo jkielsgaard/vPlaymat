@@ -13,9 +13,9 @@ from slowapi.errors import RateLimitExceeded
 
 from limiter import limiter
 from routers import cards, deck, game
-from state import broadcast_state, flush_loop, get_or_create_session, manager, _sanitize_session_id
+from state import broadcast_state, cleanup_loop, flush_loop, get_or_create_session, manager, _sanitize_session_id
 
-APP_VERSION = "v1.4.3"
+APP_VERSION = "v1.4.5"
 
 app = FastAPI(title="vPlaymat API")
 app.state.limiter = limiter
@@ -48,6 +48,7 @@ app.include_router(cards.router, prefix="/cards", tags=["cards"])
 @app.on_event("startup")
 async def on_startup() -> None:
     asyncio.create_task(flush_loop())
+    asyncio.create_task(cleanup_loop())
     public_url = os.getenv("PUBLIC_URL", "")
     if public_url:
         logger.info("vPlaymat ready — open %s in your browser  [%s]", public_url, APP_VERSION)

@@ -80,6 +80,8 @@ A Magic: The Gathering virtual playmat for personal use during online play (Spel
 
 ### Session management
 - Session persists across tab close/reopen (same browser)
+- Sessions expire after **1 hour of inactivity** — the board is cleared automatically when you return after a long break; start fresh with New Game → Import deck
+- A warning appears 10 minutes before expiry with a **Keep Playing** button to extend the session
 - Incognito window = fresh session
 - Game state cached to localStorage — survives backend restarts
 - Blocking overlay on connection loss — shows automatically when the server is unreachable and disappears when reconnected

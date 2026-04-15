@@ -3,7 +3,7 @@ from pydantic import BaseModel
 
 from exceptions import EmptyLibraryError, ScryfallAPIError
 from services.scryfall import search_tokens
-from state import broadcast_state, get_or_create_session
+from state import broadcast_state, get_or_create_session, mark_dirty
 
 router = APIRouter()
 
@@ -187,6 +187,25 @@ async def set_spectator_zone_viewing(request: SpectatorZoneViewingRequest, sessi
     gs = get_or_create_session(session_id or "default")
     gs.spectator_zone_viewing = request.enabled
     await broadcast_state(session_id or "default")
+    return {"ok": True}
+
+
+@router.post("/clear")
+async def clear_game(session_id: str = Query(default="")):
+    """Wipe all cards and game data. Used when a session expires."""
+    gs = get_or_create_session(session_id or "default")
+    gs.clear_state()
+    await broadcast_state(session_id or "default")
+    return {"ok": True}
+
+
+@router.post("/touch")
+async def touch_session(session_id: str = Query(default="")):
+    """Reset the session inactivity timer without broadcasting a state change."""
+    sid = session_id or "default"
+    gs = get_or_create_session(sid)
+    gs.touch()
+    mark_dirty(sid)
     return {"ok": True}
 
 

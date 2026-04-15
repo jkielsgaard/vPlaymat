@@ -4,11 +4,19 @@ const BASE = (import.meta.env.VITE_API_BASE as string | undefined) ?? ''
 
 import { getOrCreateSessionId } from '../hooks/useSession'
 
+// ---------------------------------------------------------------------------
+// Activity tracking — updated on every REST call so useSessionExpiry can
+// measure how long the session has been idle.
+// ---------------------------------------------------------------------------
+let _lastActivityAt = Date.now()
+export function getLastActivity(): number { return _lastActivityAt }
+
 async function request<T>(
   method: string,
   path: string,
   body?: unknown,
 ): Promise<T> {
+  _lastActivityAt = Date.now()
   const sessionId = getOrCreateSessionId()
   const sep = path.includes('?') ? '&' : '?'
   const url = `${BASE}${path}${sep}session_id=${encodeURIComponent(sessionId)}`
@@ -115,4 +123,10 @@ export const setActiveViewer = (zone: 'graveyard' | 'exile' | null) =>
 
 export const setSpectatorZoneViewing = (enabled: boolean) =>
   request<{ ok: boolean }>('POST', '/game/spectator-zone-viewing', { enabled })
+
+export const touchSession = () =>
+  request<{ ok: boolean }>('POST', '/game/touch')
+
+export const clearGame = () =>
+  request<{ ok: boolean }>('POST', '/game/clear')
 

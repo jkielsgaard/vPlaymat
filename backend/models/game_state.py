@@ -7,7 +7,7 @@ from models.card import Card
 from exceptions import EmptyLibraryError, CardNotFoundError
 
 VALID_MODES = {"normal", "commander"}
-SESSION_EXPIRY_SECONDS = 15 * 60  # 15 minutes of inactivity
+SESSION_EXPIRY_SECONDS = 60 * 60  # 1 hour of inactivity
 
 
 @dataclass

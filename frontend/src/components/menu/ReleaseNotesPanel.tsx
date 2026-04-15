@@ -49,6 +49,15 @@ export function ReleaseNotesPanel({ onClose }: ReleaseNotesPanelProps) {
             </button>
           </div>
 
+          <Version version="v1.4.5" date="April 2026">
+            <Item>Session expiry warning — a modal appears 10 minutes before your session expires due to inactivity, with a Keep Playing button to extend it</Item>
+            <Item>Sessions now expire after 1 hour of inactivity; the board is fully cleared and the import wizard re-appears</Item>
+            <Item>Expired session files are automatically cleaned up from disk every hour</Item>
+            <Item>Welcome wizard can no longer be dismissed by clicking outside or skipping — a deck import is required to start</Item>
+          </Version>
+
+          <div className="border-t border-gold/10" />
+
           <Version version="v1.4.2" date="April 2026">
             <Item>Welcome wizard now re-appears after starting a new game</Item>
             <Item>OG image added as a visual header in the import wizard</Item>

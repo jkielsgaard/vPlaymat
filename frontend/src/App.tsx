@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useBoard } from './hooks/useBoard'
 import { useSettings } from './hooks/useSettings'
 import { SettingsContext } from './contexts/SettingsContext'
@@ -8,6 +8,8 @@ import { SpectatorView } from './components/layout/OBSView'
 import { StartGameWizard } from './components/ui/StartGameWizard'
 import { ConnectionOverlay } from './components/overlays/ConnectionOverlay'
 import { MobileWarning } from './components/overlays/MobileWarning'
+import { SessionExpiryWarning } from './components/overlays/SessionExpiryWarning'
+import { useSessionExpiry } from './hooks/useSessionExpiry'
 import { ToastProvider } from './contexts/ToastContext'
 import * as api from './api/rest'
 
@@ -49,17 +51,32 @@ export default function App() {
     }
   }, [connected])
 
-  async function handleNewGame() {
+  const handleNewGame = useCallback(async () => {
+    localStorage.removeItem('vmagic-last-state')
     await api.newGame()
     setWizardDismissed(false)
-  }
+  }, [])
+
+  // Show the wizard automatically when the app loads and no deck has been imported yet
+  const hasNoDeck = gameState !== null && Object.keys(gameState.cards).length === 0
+
+  const { warningVisible, minutesLeft, extend, sessionExpired } = useSessionExpiry({
+    enabled: connected && !hasNoDeck,
+  })
+
+  const handleSessionExpiry = useCallback(async () => {
+    localStorage.removeItem('vmagic-last-state')
+    await api.clearGame()
+    setWizardDismissed(false)
+  }, [])
+
+  useEffect(() => {
+    if (sessionExpired) handleSessionExpiry()
+  }, [sessionExpired, handleSessionExpiry])
 
   async function handleToggleSpectatorZoneViewing(v: boolean) {
     await api.setSpectatorZoneViewing(v)
   }
-
-  // Show the wizard automatically when the app loads and no deck has been imported yet
-  const hasNoDeck = gameState !== null && Object.keys(gameState.cards).length === 0
   const showAutoWizard = connected && hasNoDeck && !wizardDismissed
 
   return (
@@ -72,6 +89,10 @@ export default function App() {
         hasGameState={gameState !== null}
         lostAt={disconnectedAt}
       />
+
+      {warningVisible && (
+        <SessionExpiryWarning minutesLeft={minutesLeft} onExtend={extend} />
+      )}
 
       <MenuBar
         settings={settings}

@@ -211,6 +211,12 @@ export function HelpPanel({ onClose }: HelpPanelProps) {
           </div>
         </Section>
 
+        <Section title="Sessions">
+          <Row label="Session lifetime" desc="Your board is saved server-side and persists across tab close and reopen in the same browser. Sessions expire after 1 hour of inactivity — the board is cleared automatically when you return after a long break." />
+          <Row label="Incognito / private window" desc="Opens a fresh session with no board state." />
+          <Row label="Starting fresh" desc="Game menu → New Game resets your board at any time. The import wizard re-appears so you can load a new deck." />
+        </Section>
+
         <Section title="About">
           <p className="text-xs text-gray-500 leading-relaxed">
             Made by{' '}
@@ -231,7 +237,7 @@ export function HelpPanel({ onClose }: HelpPanelProps) {
             >
               GitHub
             </a>
-            . Version v1.4.3.
+            . Version v1.4.5.
           </p>
         </Section>
 

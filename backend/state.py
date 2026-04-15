@@ -18,6 +18,9 @@ SESSION_DIR = os.getenv("SESSION_DIR", "/app/data/sessions")
 # How often (seconds) a dirty session is flushed to disk.
 _FLUSH_INTERVAL = 5.0
 
+# How often (seconds) the cleanup loop scans for expired session files.
+_CLEANUP_INTERVAL = 60 * 60  # 1 hour
+
 # Only accept session IDs that are valid UUID v4 strings to prevent path traversal.
 _UUID_RE = re.compile(
     r'^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'
@@ -151,6 +154,41 @@ async def flush_loop() -> None:
         for sid in to_flush:
             if sid in _sessions:
                 _save_session(sid, _sessions[sid])
+
+
+async def cleanup_loop() -> None:
+    """Background task: delete expired session files from disk every _CLEANUP_INTERVAL seconds."""
+    while True:
+        await asyncio.sleep(_CLEANUP_INTERVAL)
+        if not os.path.isdir(SESSION_DIR):
+            continue
+        try:
+            filenames = os.listdir(SESSION_DIR)
+        except Exception as exc:
+            logger.warning("cleanup_loop: failed to list SESSION_DIR: %s", exc)
+            continue
+        deleted = 0
+        for filename in filenames:
+            if not filename.endswith(".json"):
+                continue
+            session_id = filename[:-5]  # strip .json
+            if not _UUID_RE.match(session_id):
+                continue
+            # Session is in memory — check and evict if expired
+            if session_id in _sessions:
+                if _sessions[session_id].is_session_expired():
+                    del _sessions[session_id]
+                    _dirty.discard(session_id)
+                    _delete_session_file(session_id)
+                    deleted += 1
+                continue  # still active in memory — skip file check
+            # Not in memory — load just to read last_active and check expiry
+            state = _load_session(session_id)
+            if state is not None and state.is_session_expired():
+                _delete_session_file(session_id)
+                deleted += 1
+        if deleted:
+            logger.info("cleanup_loop: deleted %d expired session file(s).", deleted)
 
 
 # ---------------------------------------------------------------------------
