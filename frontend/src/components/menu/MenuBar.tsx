@@ -1,3 +1,4 @@
+// Top menu bar — Game menu, Settings, Help, version badge, and BETA notice.
 import { useState } from 'react'
 import type { Settings } from '../../hooks/useSettings'
 import { GameMenu } from './GameMenu'

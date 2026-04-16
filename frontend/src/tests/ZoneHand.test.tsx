@@ -1,3 +1,4 @@
+// Tests for the ZoneHand component — card rendering and play-to-battlefield interaction.
 import { render, screen, fireEvent } from '@testing-library/react'
 import { describe, it, expect, vi } from 'vitest'
 import { ZoneHand } from '../components/layout/ZoneHand'

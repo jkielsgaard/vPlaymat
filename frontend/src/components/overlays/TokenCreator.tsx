@@ -1,3 +1,4 @@
+// Token creator — search Scryfall for token art or enter a custom name and image URL.
 import { useEffect, useRef, useState } from 'react'
 import { useActions } from '../../hooks/useActions'
 

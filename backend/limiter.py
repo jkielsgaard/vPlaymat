@@ -1,3 +1,4 @@
+"""Rate limiter singleton used by deck import and other endpoints."""
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 

@@ -1,3 +1,4 @@
+// Thin wrapper that exposes all REST game actions as a single hook return value.
 import * as api from '../api/rest'
 
 export function useActions() {

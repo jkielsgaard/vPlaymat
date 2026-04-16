@@ -1,3 +1,4 @@
+// Tests for the GameMenu component — new game, spectator URL copy, and release notes.
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'

@@ -1,3 +1,4 @@
+// Help panel — keyboard shortcuts, feature overview, and links to support.
 interface HelpPanelProps {
   onClose: () => void
 }

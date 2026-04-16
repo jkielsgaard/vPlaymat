@@ -1,3 +1,4 @@
+"""Deck import REST endpoints — parse a decklist, fetch card data, and reset the session."""
 from typing import Optional
 
 from fastapi import APIRouter, HTTPException, Query, Request
@@ -6,7 +7,8 @@ from pydantic import BaseModel
 from models.card import Card
 from services.deck_parser import parse_decklist
 from services.scryfall import get_cards_batch
-from state import broadcast_state, get_or_create_session
+from session_store import get_or_create_session
+from websocket_manager import broadcast_state
 from limiter import limiter
 
 router = APIRouter()
@@ -25,6 +27,7 @@ class DeckImportRequest(BaseModel):
 @router.post("/import")
 @limiter.limit("5/minute")
 async def import_deck(request: Request, body: DeckImportRequest, session_id: str = Query(default="")):
+    """Parse a decklist, fetch card images from Scryfall, and reset the session with the new deck."""
     sid = session_id or "default"
     if body.game_mode not in VALID_MODES:
         raise HTTPException(status_code=422, detail=f"Invalid game mode: {body.game_mode}")
@@ -64,15 +67,12 @@ async def import_deck(request: Request, body: DeckImportRequest, session_id: str
         )
 
     gs = get_or_create_session(sid)
-    gs.game_mode = body.game_mode
-    gs.opponent_count = body.opponent_count
 
     names = list(body.opponent_names[: body.opponent_count])
     while len(names) < body.opponent_count:
         names.append(f"Opponent {len(names) + 1}")
-    gs.opponent_names = names
 
-    gs.reset(cards)
+    gs.reset_deck(cards, body.game_mode, body.opponent_count, names)
     gs.shuffle()
     gs.draw(7)
 
@@ -91,5 +91,6 @@ async def import_deck(request: Request, body: DeckImportRequest, session_id: str
 
 @router.get("/state")
 async def get_state(session_id: str = Query(default="")):
+    """Return the current game state as a JSON object (REST fallback; WebSocket is preferred)."""
     gs = get_or_create_session(session_id or "default")
     return gs.to_dict()

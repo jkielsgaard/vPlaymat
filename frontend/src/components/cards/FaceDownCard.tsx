@@ -1,3 +1,4 @@
+// Face-down card — renders the MTG card back image for Morph, Manifest, and library stacks.
 import cardBackSvg from '../../assets/card-back.svg'
 
 // Official MTG card back from Scryfall CDN — falls back to local SVG if unavailable

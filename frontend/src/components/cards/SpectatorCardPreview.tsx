@@ -1,3 +1,4 @@
+// Spectator card preview — enlarged hover preview positioned in a configurable corner of the spectator view.
 import type { Card } from '../../types/game'
 import type { SpectatorSettings, SpectatorPreviewCorner } from '../../hooks/useSpectatorSettings'
 

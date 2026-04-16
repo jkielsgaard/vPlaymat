@@ -1,3 +1,4 @@
+// Release notes panel — version history shown from the Game menu.
 interface ReleaseNotesPanelProps {
   onClose: () => void
 }

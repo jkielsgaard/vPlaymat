@@ -1,3 +1,4 @@
+"""GameState dataclass — holds all game data and implements all board logic."""
 import random
 import time
 from dataclasses import dataclass, field
@@ -7,6 +8,7 @@ from models.card import Card
 from exceptions import EmptyLibraryError, CardNotFoundError
 
 VALID_MODES = {"normal", "commander"}
+VALID_ZONES = {"library", "hand", "battlefield", "graveyard", "exile", "command"}
 SESSION_EXPIRY_SECONDS = 60 * 60  # 1 hour of inactivity
 
 
@@ -76,6 +78,19 @@ class GameState:
         self.commander_damage = {}
         self.turn = 1
         self.poison_counters = 0
+
+    def reset_deck(
+        self,
+        cards: List[Card],
+        game_mode: str,
+        opponent_count: int,
+        opponent_names: List[str],
+    ) -> None:
+        """Atomically set game configuration and reset to a fresh deck."""
+        self.game_mode = game_mode
+        self.opponent_count = opponent_count
+        self.opponent_names = list(opponent_names)
+        self.reset(cards)
 
     def new_game(self) -> None:
         """Return all cards to library and shuffle. Preserves game_mode, opponent_count, opponent_names, and card data."""

@@ -1,3 +1,4 @@
+// Reveal overlay — shows the top N library cards face-up inside the arena (OBS-visible).
 import { useEffect, useState } from 'react'
 import type { Card } from '../../types/game'
 import { CARD_BASE_W, CARD_BASE_H } from '../layout/ZoneBattlefield'

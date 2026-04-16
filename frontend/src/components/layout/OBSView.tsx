@@ -1,3 +1,4 @@
+// Spectator view — clean arena-only layout for OBS Browser Source and direct URL sharing.
 import { useEffect, useRef, useState } from 'react'
 import { useBoard } from '../../hooks/useBoard'
 import { SettingsContext } from '../../contexts/SettingsContext'

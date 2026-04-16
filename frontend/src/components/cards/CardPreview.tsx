@@ -1,3 +1,4 @@
+// Card preview — large card image shown on hover in the player's private area.
 import type { Card } from '../../types/game'
 import { useSettingsContext } from '../../contexts/SettingsContext'
 

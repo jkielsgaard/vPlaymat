@@ -1,10 +1,14 @@
-import { useEffect, useRef, useState } from 'react'
+// Main game layout — arena (battlefield + zones), hand, game log, and all overlays.
+import { useRef, useState } from 'react'
 import type { Card, GameState, Zone } from '../../types/game'
 import { useActions } from '../../hooks/useActions'
 import * as api from '../../api/rest'
 import { useGameLog } from '../../hooks/useGameLog'
 import { useSettingsContext } from '../../contexts/SettingsContext'
 import { useToast, ToastDisplay } from '../../contexts/ToastContext'
+import { useCardSelection } from '../../hooks/useCardSelection'
+import { useBulkOperations } from '../../hooks/useBulkOperations'
+import { usePlaymatKeyboard } from '../../hooks/usePlaymatKeyboard'
 import { CardPreview } from '../cards/CardPreview'
 import { ContextMenu } from '../overlays/ContextMenu'
 import { GameLog } from '../overlays/GameLog'
@@ -23,7 +27,6 @@ import { ScryPanel } from '../overlays/ScryPanel'
 import { RevealOverlay } from '../overlays/RevealOverlay'
 
 // ── Buy Me a Coffee ──────────────────────────────────────────────────────────
-// TODO: replace the placeholder URL below with your buymeacoffee.com link
 const COFFEE_URL = 'https://buymeacoffee.com/jkielsgaard'
 
 interface PlaymatProps {
@@ -65,8 +68,9 @@ export function Playmat({ gameState, logOpen, onCloseLog, betaBannerVisible = fa
   const [scryOpen, setScryOpen] = useState(false)
   const [revealOpen, setRevealOpen] = useState(false)
   const [confirmUntapAll, setConfirmUntapAll] = useState(false)
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [cardZOrder, setCardZOrder] = useState<string[]>([])
+
+  const { selectedIds, setSelectedIds } = useCardSelection()
 
   const allCards = Object.values(gameState.cards)
   const libraryCards = gameState.library_order.map((id) => gameState.cards[id]).filter(Boolean)
@@ -90,26 +94,34 @@ export function Playmat({ gameState, logOpen, onCloseLog, betaBannerVisible = fa
 
   async function handleMoveCard(cardId: string, zone: Zone) {
     const card = gameState.cards[cardId]
-    if (zone === 'battlefield') {
-      await actions.moveCard(cardId, zone, 0.5, 0.5)
-      setCardZOrder(prev => [...prev.filter(id => id !== cardId), cardId])
-    } else {
-      await actions.moveCard(cardId, zone)
-      setCardZOrder(prev => prev.filter(id => id !== cardId))
+    try {
+      if (zone === 'battlefield') {
+        await actions.moveCard(cardId, zone, 0.5, 0.5)
+        setCardZOrder(prev => [...prev.filter(id => id !== cardId), cardId])
+      } else {
+        await actions.moveCard(cardId, zone)
+        setCardZOrder(prev => prev.filter(id => id !== cardId))
+      }
+      if (card) addEntry(turn, `Moved ${card.name} → ${ZONE_LABELS[zone] ?? zone}`)
+    } catch {
+      addToast(`Failed to move card`)
     }
-    if (card) addEntry(turn, `Moved ${card.name} → ${ZONE_LABELS[zone] ?? zone}`)
   }
 
   async function handleDrop(cardId: string, x: number, y: number) {
     const card = gameState.cards[cardId]
-    await actions.moveCard(cardId, 'battlefield', x, y)
-    if (card && card.zone !== 'battlefield') {
-      addEntry(turn, `Moved ${card.name} → Battlefield`)
-    }
-    // Only update z-order for single-card drops.
-    // Multi-drag z-order is handled once by handleGroupMoved to preserve internal order.
-    if (!(selectedIds.has(cardId) && selectedIds.size > 1)) {
-      setCardZOrder(prev => [...prev.filter(id => id !== cardId), cardId])
+    try {
+      await actions.moveCard(cardId, 'battlefield', x, y)
+      if (card && card.zone !== 'battlefield') {
+        addEntry(turn, `Moved ${card.name} → Battlefield`)
+      }
+      // Only update z-order for single-card drops.
+      // Multi-drag z-order is handled once by handleGroupMoved to preserve internal order.
+      if (!(selectedIds.has(cardId) && selectedIds.size > 1)) {
+        setCardZOrder(prev => [...prev.filter(id => id !== cardId), cardId])
+      }
+    } catch {
+      addToast(`Failed to drop card`)
     }
   }
 
@@ -125,30 +137,30 @@ export function Playmat({ gameState, logOpen, onCloseLog, betaBannerVisible = fa
 
   function handleTap(cardId: string) {
     const card = gameState.cards[cardId]
-    actions.tapCard(cardId)
+    actions.tapCard(cardId).catch(() => addToast('Failed to tap card'))
     if (card) addEntry(turn, `${card.tapped ? 'Untapped' : 'Tapped'} ${card.name}`)
   }
 
   function handleDraw(count = 1) {
-    actions.drawCards(count)
+    actions.drawCards(count).catch(() => addToast('Failed to draw'))
     addEntry(turn, count === 1 ? 'Drew a card' : `Drew ${count} cards`)
     addToast(count === 1 ? 'Drew a card' : `Drew ${count} cards`)
   }
 
   function handleShuffle() {
-    actions.shuffleLibrary()
+    actions.shuffleLibrary().catch(() => addToast('Failed to shuffle'))
     addEntry(turn, 'Shuffled library')
     addToast('Library shuffled')
   }
 
   function handleNextTurn() {
-    actions.nextTurn()
+    actions.nextTurn().catch(() => addToast('Failed to advance turn'))
     addEntry(turn + 1, `Turn ${turn + 1} started`)
     addToast(`Turn ${turn + 1}`)
   }
 
   function handleUntapAll() {
-    actions.untapAll()
+    actions.untapAll().catch(() => addToast('Failed to untap'))
     addEntry(turn, 'Untapped all cards')
     addToast('All cards untapped')
     setConfirmUntapAll(false)
@@ -156,19 +168,19 @@ export function Playmat({ gameState, logOpen, onCloseLog, betaBannerVisible = fa
 
   function handleAdjustLife(delta: number) {
     const before = gameState.life
-    actions.adjustLife(delta)
+    actions.adjustLife(delta).catch(() => addToast('Failed to adjust life'))
     addEntry(turn, `Life: ${before} → ${before + delta} (${delta > 0 ? '+' : ''}${delta})`)
   }
 
   function handleAdjustPoison(delta: number) {
     const before = gameState.poison_counters
-    actions.adjustPoison(delta)
+    actions.adjustPoison(delta).catch(() => addToast('Failed to adjust poison'))
     addEntry(turn, `Poison: ${before} → ${Math.max(0, before + delta)}`)
   }
 
   function handleAddCounter(cardId: string, type: string, delta: number) {
     const card = gameState.cards[cardId]
-    actions.addCounter(cardId, type, delta)
+    actions.addCounter(cardId, type, delta).catch(() => addToast('Failed to add counter'))
     if (card) {
       const label = type === 'p1p1' ? '+1/+1' : type === 'm1m1' ? '-1/-1' : type
       addEntry(turn, delta > 0
@@ -179,20 +191,24 @@ export function Playmat({ gameState, logOpen, onCloseLog, betaBannerVisible = fa
 
   function handleRemoveAllCounters(cardId: string) {
     const card = gameState.cards[cardId]
-    actions.removeAllCounters(cardId)
+    actions.removeAllCounters(cardId).catch(() => addToast('Failed to remove counters'))
     if (card) addEntry(turn, `Removed all counters from ${card.name}`)
   }
 
   function handleCreateToken(name: string, image_uri: string) {
-    actions.createToken(name, image_uri)
+    actions.createToken(name, image_uri).catch(() => addToast('Failed to create token'))
     addEntry(turn, `Created ${name} token`)
   }
 
   async function handleScryConfirm(keepTop: string[], sendBottom: string[]) {
     const n = keepTop.length + sendBottom.length
-    await actions.scryDecide(keepTop, sendBottom)
-    setScryOpen(false)
-    addEntry(turn, `Scryed ${n}`)
+    try {
+      await actions.scryDecide(keepTop, sendBottom)
+      setScryOpen(false)
+      addEntry(turn, `Scryed ${n}`)
+    } catch {
+      addToast('Failed to complete scry')
+    }
   }
 
   function handleCommanderDragStart(e: React.DragEvent, card: Card) {
@@ -202,152 +218,47 @@ export function Playmat({ gameState, logOpen, onCloseLog, betaBannerVisible = fa
 
   async function handleMoveToTop(cardId: string) {
     const card = gameState.cards[cardId]
-    await actions.moveCard(cardId, 'library', 0, 0, true)
-    if (card) addEntry(turn, `Moved ${card.name} → Top of Library`)
+    try {
+      await actions.moveCard(cardId, 'library', 0, 0, true)
+      if (card) addEntry(turn, `Moved ${card.name} → Top of Library`)
+    } catch {
+      addToast('Failed to move card to top')
+    }
   }
 
   function handleFlip(cardId: string) {
     const card = gameState.cards[cardId]
-    actions.flipCard(cardId)
+    actions.flipCard(cardId).catch(() => addToast('Failed to flip card'))
     if (card) addEntry(turn, `${card.face_down ? 'Turned face-up' : 'Turned face-down'}: ${card.name}`)
   }
 
   function handleTransform(cardId: string) {
     const card = gameState.cards[cardId]
-    actions.transformCard(cardId)
+    actions.transformCard(cardId).catch(() => addToast('Failed to transform card'))
     if (card) addEntry(turn, `Transformed ${card.name}`)
   }
 
-  // 7.11 — bulk actions on selected cards
-  async function handleBulkMove(cardIds: string[], zone: Zone) {
-    for (const cardId of cardIds) {
-      await handleMoveCard(cardId, zone)
-    }
-    setCardZOrder(prev => prev.filter(id => !cardIds.includes(id)))
-    setSelectedIds(new Set())
-  }
+  const bulk = useBulkOperations({
+    selectedIds,
+    setSelectedIds,
+    cards: gameState.cards,
+    battlefieldCards,
+    contextMenuCardId: contextMenu?.card.id,
+    stackGap: settings.stackGap,
+    attachGap: settings.attachGap,
+    cardScale,
+    handleMoveCard,
+    handleTap,
+    setCardZOrder,
+  })
 
-  function handleBulkTap() {
-    ;[...selectedIds].forEach(id => {
-      const card = gameState.cards[id]
-      if (card && !card.tapped) handleTap(id)
-    })
-    setSelectedIds(new Set())
-  }
-
-  function handleBulkUntap() {
-    ;[...selectedIds].forEach(id => {
-      const card = gameState.cards[id]
-      if (card && card.tapped) handleTap(id)
-    })
-    setSelectedIds(new Set())
-  }
-
-  function handleBulkStack(direction: 'horizontal' | 'vertical') {
-    if (selectedIds.size < 2) return
-    const battlefieldEl = document.querySelector('[data-testid="battlefield"]')
-    const rect = battlefieldEl?.getBoundingClientRect()
-    if (!rect || rect.width === 0) return
-
-    const gap = settings.stackGap
-    // Use the larger card dimension for safe clamping regardless of tap state
-    const maxDim = Math.max(CARD_BASE_W, CARD_BASE_H) * cardScale
-
-    // Option B: right-clicked card is the anchor (back, lowest z).
-    // Remaining cards stack in front of it sorted spatially (so the layout is predictable).
-    const hostId = contextMenu?.card.id
-    const anchor = hostId ? battlefieldCards.find(c => c.id === hostId) : undefined
-    const others = battlefieldCards
-      .filter(c => selectedIds.has(c.id) && c.id !== hostId)
-      .sort((a, b) => direction === 'horizontal' ? a.x - b.x : a.y - b.y)
-    const sorted = anchor ? [anchor, ...others] : others
-    if (sorted.length === 0) return
-    const stackAnchor = sorted[0]
-    const stepFx = gap / rect.width
-    const stepFy = gap / rect.height
-
-    const minFx = (maxDim / 2) / rect.width
-    const maxFx = 1 - (maxDim / 2) / rect.width
-    const minFy = (maxDim / 2) / rect.height
-    const maxFy = 1 - (maxDim / 2) / rect.height
-
-    sorted.forEach((card, i) => {
-      const nx = direction === 'horizontal'
-        ? Math.max(minFx, Math.min(maxFx, stackAnchor.x + i * stepFx))
-        : stackAnchor.x
-      const ny = direction === 'vertical'
-        ? Math.max(minFy, Math.min(maxFy, stackAnchor.y + i * stepFy))
-        : stackAnchor.y
-      // Call actions directly — handleDrop would race on setCardZOrder since it's async
-      actions.moveCard(card.id, 'battlefield', nx, ny)
-    })
-
-    // Set z-order explicitly: sorted[0] = back, sorted[last] = front (on top)
-    const sortedIds = sorted.map(c => c.id)
-    setCardZOrder(prev => [...prev.filter(id => !sortedIds.includes(id)), ...sortedIds])
-    setSelectedIds(new Set())
-  }
-
-  function handleBulkAttach(hostId: string) {
-    if (selectedIds.size < 2) return
-    const battlefieldEl = document.querySelector('[data-testid="battlefield"]')
-    const rect = battlefieldEl?.getBoundingClientRect()
-    if (!rect || rect.width === 0) return
-
-    const gap = settings.attachGap
-    const maxDim = Math.max(CARD_BASE_W, CARD_BASE_H) * cardScale
-    const host = battlefieldCards.find(c => c.id === hostId)
-    if (!host) return
-
-    const stepFx = gap / rect.width
-    const stepFy = gap / rect.height
-    const minFx = (maxDim / 2) / rect.width
-    const maxFx = 1 - (maxDim / 2) / rect.width
-    const minFy = (maxDim / 2) / rect.height
-    const maxFy = 1 - (maxDim / 2) / rect.height
-
-    // Equipment in selection order: first selected = index 0 = closest to host
-    const equipment = [...selectedIds]
-      .filter(id => id !== hostId)
-      .map(id => battlefieldCards.find(c => c.id === id))
-      .filter((c): c is typeof battlefieldCards[0] => c !== undefined)
-
-    equipment.forEach((card, i) => {
-      const nx = Math.max(minFx, Math.min(maxFx, host.x + (i + 1) * stepFx))
-      const ny = Math.max(minFy, Math.min(maxFy, host.y + (i + 1) * stepFy))
-      actions.moveCard(card.id, 'battlefield', nx, ny)
-    })
-
-    // Z-order: equipment reversed (last-selected lowest z), then host (highest z)
-    const equipmentIds = equipment.map(c => c.id)
-    setCardZOrder(prev => [
-      ...prev.filter(id => id !== hostId && !equipmentIds.includes(id)),
-      ...[...equipmentIds].reverse(),
-      hostId,
-    ])
-    setSelectedIds(new Set())
-  }
-
-  // Keyboard shortcuts — use a ref so the effect doesn't re-register on every render
-  const shortcutRef = useRef({ handleDraw, handleNextTurn, handleBulkTap, handleBulkUntap, selectedIds })
-  shortcutRef.current = { handleDraw, handleNextTurn, handleBulkTap, handleBulkUntap, selectedIds }
-
-  useEffect(() => {
-    function onKeyDown(e: KeyboardEvent) {
-      const tag = (e.target as HTMLElement).tagName
-      if (['INPUT', 'TEXTAREA', 'SELECT'].includes(tag)) return
-      if ((e.target as HTMLElement).isContentEditable) return
-      const { handleDraw, handleNextTurn, handleBulkTap, handleBulkUntap, selectedIds } = shortcutRef.current
-      switch (e.key.toLowerCase()) {
-        case 'd': e.preventDefault(); handleDraw(1); break
-        case 'n': e.preventDefault(); handleNextTurn(); break
-        case 't': if (selectedIds.size > 0) { e.preventDefault(); handleBulkTap() } break
-        case 'u': if (selectedIds.size > 0) { e.preventDefault(); handleBulkUntap() } break
-      }
-    }
-    window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
-  }, [])
+  usePlaymatKeyboard({
+    handleDraw,
+    handleNextTurn,
+    handleBulkTap: bulk.handleBulkTap,
+    handleBulkUntap: bulk.handleBulkUntap,
+    selectedIds,
+  })
 
   // Card preview width — reserved so panels never overlap it
   const previewWidth = Math.round(208 * settings.cardPreviewScale)
@@ -433,7 +344,7 @@ export function Playmat({ gameState, logOpen, onCloseLog, betaBannerVisible = fa
                 onGroupMoved={handleGroupMoved}
                 onHover={setHoveredCard}
                 onAddCounter={handleAddCounter}
-                onBulkMove={handleBulkMove}
+                onBulkMove={bulk.handleBulkMove}
                 cardScale={cardScale}
                 cardZOrder={cardZOrder}
               />
@@ -449,6 +360,7 @@ export function Playmat({ gameState, logOpen, onCloseLog, betaBannerVisible = fa
                     commanderCardAny && commanderCardAny.zone !== 'command'
                       ? () => {
                           actions.moveCard(commanderCardAny.id, 'command')
+                            .catch(() => addToast('Failed to return commander'))
                           addEntry(turn, `Returned ${commanderCardAny.name} to Command Zone`)
                         }
                       : undefined
@@ -570,7 +482,7 @@ export function Playmat({ gameState, logOpen, onCloseLog, betaBannerVisible = fa
 
       </div>
 
-      {/* 3.7 — Scryfall attribution (required by Scryfall API terms) */}
+      {/* Scryfall attribution (required by Scryfall API terms) */}
       <p className="text-gray-600 text-[10px] mt-2 text-center" style={{ width: panelWidth - LEFT_COL_W, marginLeft: LEFT_COL_W }}>
         Card data &amp; images:{' '}
         <a href="https://scryfall.com" target="_blank" rel="noopener noreferrer" className="hover:text-gray-400 underline">
@@ -594,12 +506,12 @@ export function Playmat({ gameState, logOpen, onCloseLog, betaBannerVisible = fa
           onFlip={handleFlip}
           onTransform={handleTransform}
           selectionCount={selectedIds.size}
-          onBulkTap={selectedIds.size > 1 ? handleBulkTap : undefined}
-          onBulkUntap={selectedIds.size > 1 ? handleBulkUntap : undefined}
-          onBulkMove={selectedIds.size > 1 ? (zone) => handleBulkMove([...selectedIds], zone) : undefined}
-          onBulkStackH={selectedIds.size > 1 ? () => handleBulkStack('horizontal') : undefined}
-          onBulkStackV={selectedIds.size > 1 ? () => handleBulkStack('vertical') : undefined}
-          onBulkAttach={selectedIds.size > 1 && contextMenu?.card.zone === 'battlefield' ? () => handleBulkAttach(contextMenu.card.id) : undefined}
+          onBulkTap={selectedIds.size > 1 ? bulk.handleBulkTap : undefined}
+          onBulkUntap={selectedIds.size > 1 ? bulk.handleBulkUntap : undefined}
+          onBulkMove={selectedIds.size > 1 ? (zone) => bulk.handleBulkMove([...selectedIds], zone) : undefined}
+          onBulkStackH={selectedIds.size > 1 ? () => bulk.handleBulkStack('horizontal') : undefined}
+          onBulkStackV={selectedIds.size > 1 ? () => bulk.handleBulkStack('vertical') : undefined}
+          onBulkAttach={selectedIds.size > 1 && contextMenu?.card.zone === 'battlefield' ? () => bulk.handleBulkAttach(contextMenu.card.id) : undefined}
         />
       )}
 
@@ -649,4 +561,3 @@ export function Playmat({ gameState, logOpen, onCloseLog, betaBannerVisible = fa
     </div>
   )
 }
-

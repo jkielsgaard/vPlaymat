@@ -1,3 +1,4 @@
+// Scry panel — shows the top N library cards privately and lets the player reorder them.
 import { useEffect, useState } from 'react'
 import type { Card } from '../../types/game'
 import { CARD_BASE_W, CARD_BASE_H } from '../layout/ZoneBattlefield'

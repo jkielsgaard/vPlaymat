@@ -1,3 +1,4 @@
+// Tests for the ZoneBattlefield component — card rendering, drag events, and selection.
 import { render, screen, fireEvent, createEvent } from '@testing-library/react'
 import { describe, it, expect, vi } from 'vitest'
 import { ZoneBattlefield } from '../components/layout/ZoneBattlefield'

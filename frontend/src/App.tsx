@@ -1,3 +1,4 @@
+// Root component — renders the main game UI or the spectator view, and manages global state.
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useBoard } from './hooks/useBoard'
 import { useSettings } from './hooks/useSettings'

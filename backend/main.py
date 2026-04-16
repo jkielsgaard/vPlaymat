@@ -1,3 +1,4 @@
+"""FastAPI application entry point — CORS config, startup tasks, and WebSocket endpoint."""
 import asyncio
 import json
 import logging
@@ -13,7 +14,8 @@ from slowapi.errors import RateLimitExceeded
 
 from limiter import limiter
 from routers import cards, deck, game
-from state import broadcast_state, cleanup_loop, flush_loop, get_or_create_session, manager, _sanitize_session_id
+from session_store import flush_loop, cleanup_loop, get_or_create_session, _sanitize_session_id
+from websocket_manager import broadcast_state, manager
 
 APP_VERSION = "v1.4.5"
 

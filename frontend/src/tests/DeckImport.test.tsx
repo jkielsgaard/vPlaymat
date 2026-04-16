@@ -1,11 +1,12 @@
+// Tests for the DeckImport component — modal open/close, API calls, and error display.
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { DeckImport } from '../components/ui/DeckImport'
 
-// ------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 // Mock the REST API
-// ------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 
 vi.mock('../api/rest', () => ({
   importDeck: vi.fn(),

@@ -1,3 +1,4 @@
+// Life counter — +/− buttons with support for large totals and read-only spectator mode.
 interface LifeCounterProps {
   life: number
   onAdjust: (delta: number) => void

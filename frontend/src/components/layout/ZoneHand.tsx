@@ -1,3 +1,4 @@
+// Hand zone — displays cards in hand and handles playing them to the battlefield.
 import type { Card } from '../../types/game'
 import { CardView } from '../cards/CardView'
 import { CARD_BASE_W, CARD_BASE_H } from './ZoneBattlefield'

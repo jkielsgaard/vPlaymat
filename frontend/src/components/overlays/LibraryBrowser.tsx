@@ -1,3 +1,4 @@
+// Library browser — private panel below the arena showing all library cards face-up.
 import { useEffect, useState } from 'react'
 import type { Card } from '../../types/game'
 import { CardView } from '../cards/CardView'

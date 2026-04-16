@@ -1,3 +1,4 @@
+"""MTGA decklist parser — converts raw text into (card_name, count) tuples."""
 import re
 from typing import List, Tuple
 

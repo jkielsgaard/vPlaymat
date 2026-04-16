@@ -1,3 +1,4 @@
+// Game menu — New Game, Copy Spectator URL, Release Notes, and other session actions.
 import { useEffect, useRef, useState } from 'react'
 import { Portal } from '../ui/Portal'
 import { StartGameWizard } from '../ui/StartGameWizard'

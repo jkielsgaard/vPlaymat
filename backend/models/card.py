@@ -1,3 +1,4 @@
+"""Card dataclass — represents a single Magic card in any zone."""
 from dataclasses import dataclass, field, asdict
 from typing import Dict
 import uuid

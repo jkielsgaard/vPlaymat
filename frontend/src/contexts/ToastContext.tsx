@@ -1,3 +1,4 @@
+// React context and hook for showing temporary toast notifications across the app.
 import { createContext, useCallback, useContext, useState } from 'react'
 import type { ReactNode } from 'react'
 

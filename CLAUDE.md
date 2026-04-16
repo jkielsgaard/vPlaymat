@@ -65,7 +65,7 @@ Browser (React) ←──WebSocket──→ FastAPI (Python)
 
 - Each browser gets a **session ID** stored in `localStorage` (`useSession.ts`).
 - The backend maintains one `GameState` object per session ID in memory (`state.py`).
-- Sessions are persisted to disk (JSON files in `/app/data/sessions/`) every 5 seconds via a background flush loop, and expire after 15 minutes of inactivity.
+- Sessions are persisted to disk (JSON files in `/app/data/sessions/`) every 5 seconds via a background flush loop, and expire after 1 hour of inactivity.
 - The OBS view (`?obs=1` URL param) connects to the same session via a `session_id` URL param — it is read-only and mirrors the player's board live.
 
 ### Key files
@@ -100,6 +100,47 @@ App
 │   └── GameLog (action log panel)
 └── StartGameWizard (deck import modal, shown on first load or from menu)
 ```
+
+---
+
+## Architectural rules (REQUIRED — apply to every code change)
+
+These rules codify the intended architecture. Follow them whenever editing or creating code.
+
+### Backend layer responsibilities
+
+| Layer | Owns | Must NOT |
+|-------|------|----------|
+| `models/` | Game rules, state transitions, data shape | Call routers, access HTTP, touch the session store |
+| `routers/` | HTTP contract — parse request, call model/service, return response | Contain game logic; directly mutate `GameState` fields |
+| `services/` | External integrations (Scryfall, deck parser) | Import from `routers/` |
+| `state.py` | Session CRUD, WebSocket broadcast, background flush | Implement game rules |
+
+**Router mutation rule**: Routers must never set individual `GameState` fields directly. All multi-field mutations must go through a single `GameState` method so they are atomic. Example: `deck.py` must call `gs.reset_deck(...)` rather than setting `gs.game_mode`, `gs.opponent_count`, etc. one by one.
+
+**Zone constants rule**: Zone names and valid-zone lists must be defined once in `models/` and imported by routers. Do not duplicate them.
+
+### Frontend layer responsibilities
+
+| Layer | Owns | Must NOT |
+|-------|------|----------|
+| `api/` | HTTP/WebSocket transport, session injection | Contain business logic or UI state |
+| `hooks/` | Business logic, derived state, action orchestration | Render JSX |
+| `components/` | Rendering and user interaction | Directly call REST; contain complex branching logic |
+| `types/` | Shared TypeScript interfaces | Export runtime logic |
+
+**Component size rule**: If a component exceeds ~300 lines or has more than 5 `useState` calls, extract logic into a custom hook before adding more code.
+
+**Error handling rule**: Every `async` action call in a component must have a `try/catch`. Silent failures are not acceptable — errors must be surfaced to the user (toast, log entry, or banner).
+
+**Hook extraction rule**: Logic that is reusable across components (selection, bulk operations, keyboard shortcuts) must live in a hook, not inside a component body.
+
+### General rules
+
+- **No duplicated constants**: if a value is used in more than one file, define it once and import it.
+- **No half-transactions**: operations that change multiple related fields must be wrapped in a single model method or service call.
+- **Cache versioning**: when the `GameState` type gains a new required field, add a matching default to the frontend cache merge in `useBoard.ts`.
+- **Tests follow architecture**: if a refactor moves logic from a component into a hook, move the tests too.
 
 ---
 
@@ -145,3 +186,41 @@ App
 - Pure styling or layout (Tailwind classes)
 - Third-party library behaviour (Scryfall API responses — mock those)
 - Implementation details that are likely to change (internal state shape)
+
+---
+
+## Comment style guide
+
+### File headers (ALL files)
+
+Every source file must start with a one-line description of its purpose:
+
+- **Python** — module-level docstring: `"""Short description."""`
+- **TypeScript / TSX** — single-line comment: `// Short description.`
+
+Skip `__init__.py` files (they are empty package markers) and auto-generated files (e.g. `vite-env.d.ts`).
+
+### Section dividers
+
+Use horizontal rules to label logical groups within a file:
+
+| Location | Python | TypeScript |
+|----------|--------|------------|
+| Top-level (no indent) | `# ` + 75 dashes | `// ` + 75 dashes |
+| Inside a class (4-space indent) | `    # ` + 66 dashes | *(not applicable)* |
+
+The 75-dash line: `# ---------------------------------------------------------------------------`
+The 66-dash line (class-level only): `    # ------------------------------------------------------------------`
+
+### Function / method documentation
+
+- **Python public functions and methods** — use a `"""docstring"""` immediately after `def`.
+- **Python private helpers** (`_name`) — a docstring is optional; a `#` comment above is fine.
+- **FastAPI endpoint functions** — always add a docstring describing what the endpoint does and any notable behaviour.
+- **TypeScript** — use `//` comments above or inside the function body for logic that is not self-evident. Do not add JSDoc blocks to simple components.
+
+### Inline comments
+
+- Use `#` (Python) or `//` (TypeScript) for logic that is not obvious from the code itself.
+- Do not comment self-evident code (e.g. `i += 1  # increment i`).
+- Prefer clear variable and function names over comments where possible.

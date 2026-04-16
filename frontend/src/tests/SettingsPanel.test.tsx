@@ -1,3 +1,4 @@
+// Tests for the SettingsPanel component — slider inputs and settings persistence.
 import { render, screen, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, it, expect, vi } from 'vitest'

@@ -1,3 +1,4 @@
+"""Scryfall API client — card lookups, batch imports, and token searches."""
 import asyncio
 from typing import Dict, List, Optional, Tuple, Any
 
@@ -13,9 +14,9 @@ _semaphore = asyncio.Semaphore(10)
 _client: Optional[httpx.AsyncClient] = None
 
 
-# ------------------------------------------------------------------
+# ---------------------------------------------------------------------------
 # Client management (allows test injection)
-# ------------------------------------------------------------------
+# ---------------------------------------------------------------------------
 
 def _get_client() -> httpx.AsyncClient:
     global _client
@@ -34,9 +35,9 @@ def clear_cache() -> None:
     _cache.clear()
 
 
-# ------------------------------------------------------------------
+# ---------------------------------------------------------------------------
 # Image URI extraction (handles double-faced cards)
-# ------------------------------------------------------------------
+# ---------------------------------------------------------------------------
 
 def _extract_image_uri(data: dict) -> str:
     if "image_uris" in data:
@@ -62,9 +63,9 @@ def _build_result(card_data: dict) -> dict:
     return result
 
 
-# ------------------------------------------------------------------
+# ---------------------------------------------------------------------------
 # Public API — batch (preferred for deck import)
-# ------------------------------------------------------------------
+# ---------------------------------------------------------------------------
 
 async def get_cards_batch(names: List[str]) -> Tuple[Dict[str, dict], List[str]]:
     """
@@ -133,9 +134,9 @@ async def get_cards_batch(names: List[str]) -> Tuple[Dict[str, dict], List[str]]
     return found, not_found
 
 
-# ------------------------------------------------------------------
+# ---------------------------------------------------------------------------
 # Public API — single card (used for one-off lookups)
-# ------------------------------------------------------------------
+# ---------------------------------------------------------------------------
 
 async def get_card(name: str) -> dict:
     """
@@ -186,9 +187,9 @@ async def get_card(name: str) -> dict:
         raise ScryfallAPIError(f"Failed to fetch '{name}' after {max_retries} attempts")
 
 
-# ------------------------------------------------------------------
+# ---------------------------------------------------------------------------
 # Public API — token search
-# ------------------------------------------------------------------
+# ---------------------------------------------------------------------------
 
 async def search_tokens(query: str) -> List[Dict[str, Any]]:
     """

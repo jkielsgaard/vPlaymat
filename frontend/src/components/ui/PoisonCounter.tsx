@@ -1,3 +1,4 @@
+// Poison counter — +/− buttons tracking infect/poison counters with read-only spectator mode.
 interface PoisonCounterProps {
   count: number
   onAdjust: (delta: number) => void

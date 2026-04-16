@@ -1,3 +1,4 @@
+// Exile zone — top-card preview with click-to-open viewer; supports read-only mode.
 import { useState } from 'react'
 import type { Card } from '../../types/game'
 import { CardView } from '../cards/CardView'

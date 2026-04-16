@@ -1,3 +1,4 @@
+// Right-click context menu — zone moves, face-down, transform, attach, and stack actions.
 import { useEffect, useRef } from 'react'
 import type { Card, Zone } from '../../types/game'
 

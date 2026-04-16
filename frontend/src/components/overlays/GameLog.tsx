@@ -1,3 +1,4 @@
+// Game log panel — scrollable list of action entries with turn numbers.
 import { useEffect } from 'react'
 import type { LogEntry } from '../../hooks/useGameLog'
 

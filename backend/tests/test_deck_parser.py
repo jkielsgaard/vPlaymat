@@ -1,3 +1,4 @@
+"""Tests for the MTGA decklist parser — valid formats, skipped lines, and edge cases."""
 import pytest
 from services.deck_parser import parse_decklist
 

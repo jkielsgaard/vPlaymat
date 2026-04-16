@@ -1,3 +1,4 @@
+// Tests for the LifeCounter component — increment, decrement, and read-only mode.
 import { render, screen, fireEvent } from '@testing-library/react'
 import { describe, it, expect, vi } from 'vitest'
 import { LifeCounter } from '../components/ui/LifeCounter'

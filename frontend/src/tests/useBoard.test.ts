@@ -1,11 +1,12 @@
+// Tests for the useBoard hook — WebSocket connection, state updates, and reconnect.
 import { renderHook, act } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { useBoard } from '../hooks/useBoard'
 import type { GameState } from '../types/game'
 
-// ------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 // Mock WebSocket
-// ------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 
 const mockClose = vi.fn()
 let mockInstance: {
@@ -32,6 +33,7 @@ const MockWebSocket = vi.fn(() => {
 const emptyState: GameState = {
   cards: {},
   library_order: [],
+  graveyard_order: [],
   life: 20,
   game_mode: 'normal',
   commander_damage: {},
@@ -39,6 +41,9 @@ const emptyState: GameState = {
   opponent_count: 3,
   opponent_names: [],
   poison_counters: 0,
+  commander_returns: 0,
+  active_viewer: null,
+  spectator_zone_viewing: false,
 }
 
 const updatedState: GameState = {
@@ -46,9 +51,9 @@ const updatedState: GameState = {
   life: 15,
 }
 
-// ------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 // Tests
-// ------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 
 describe('useBoard', () => {
   beforeEach(() => {

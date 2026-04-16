@@ -1,3 +1,4 @@
+// Deck import component — trigger button and modal for pasting an MTGA decklist.
 import { useState } from 'react'
 import { importDeck } from '../../api/rest'
 

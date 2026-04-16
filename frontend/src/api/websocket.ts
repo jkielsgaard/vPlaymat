@@ -1,3 +1,4 @@
+// WebSocket helper — builds the connection URL from env vars or derives it from window.location.
 import type { GameState } from '../types/game'
 
 // In development VITE_WS_URL=ws://localhost:8000/ws (set in .env)

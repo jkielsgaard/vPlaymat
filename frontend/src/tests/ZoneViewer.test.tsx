@@ -1,3 +1,4 @@
+// Tests for the ZoneViewer overlay — card display, close button, and read-only mode.
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { ZoneViewer } from '../components/overlays/ZoneViewer'

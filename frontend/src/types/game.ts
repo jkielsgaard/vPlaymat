@@ -1,3 +1,4 @@
+// Shared TypeScript types for cards, game state, and zone names.
 export type Zone = 'library' | 'hand' | 'battlefield' | 'graveyard' | 'exile' | 'command'
 export type GameMode = 'normal' | 'commander'
 

@@ -1,3 +1,4 @@
+// Tests for the useSession hook — UUID generation, localStorage persistence, and isolation.
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { getOrCreateSessionId } from '../hooks/useSession'
 

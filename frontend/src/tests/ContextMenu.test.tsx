@@ -1,3 +1,4 @@
+// Tests for the ContextMenu component — zone move options and action callbacks.
 import { render, screen } from '@testing-library/react'
 import { describe, it, expect, vi } from 'vitest'
 import { ContextMenu } from '../components/overlays/ContextMenu'

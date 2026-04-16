@@ -1,3 +1,4 @@
+// Settings panel — arena size, card scales, colours, spectator options, and other preferences.
 import { useState } from 'react'
 import type { CommanderZoneCorner, Settings } from '../../hooks/useSettings'
 

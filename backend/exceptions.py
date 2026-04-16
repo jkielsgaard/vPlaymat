@@ -1,3 +1,6 @@
+"""Custom exception classes raised by game logic and external service calls."""
+
+
 class EmptyLibraryError(Exception):
     """Raised when drawing from an empty library."""
 

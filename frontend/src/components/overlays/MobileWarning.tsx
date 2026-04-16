@@ -1,3 +1,4 @@
+// Mobile warning — dismissible banner telling mobile users the app is desktop-only.
 import { useEffect, useState } from 'react'
 
 const DISMISSED_KEY = 'vmagic-mobile-dismissed'

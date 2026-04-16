@@ -1,3 +1,4 @@
+"""Tests for the Scryfall API service — single lookups, batch imports, and caching."""
 import asyncio
 import pytest
 import httpx
@@ -6,9 +7,9 @@ import respx
 import services.scryfall as scryfall_service
 from exceptions import CardNotFoundError, ScryfallAPIError
 
-# ------------------------------------------------------------------
+# ---------------------------------------------------------------------------
 # Canned Scryfall responses
-# ------------------------------------------------------------------
+# ---------------------------------------------------------------------------
 
 MOCK_CARD = {
     "name": "Lightning Bolt",
@@ -37,9 +38,9 @@ MOCK_DFC = {
 }
 
 
-# ------------------------------------------------------------------
+# ---------------------------------------------------------------------------
 # Tests
-# ------------------------------------------------------------------
+# ---------------------------------------------------------------------------
 
 @pytest.mark.asyncio
 async def test_fetch_card_returns_image_uri(mock_scryfall):

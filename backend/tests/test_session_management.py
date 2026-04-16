@@ -1,9 +1,10 @@
+"""Tests for session management — create, persist, load, expire, and clean up sessions."""
 import os
 import time
 import pytest
 
-import state as state_module
-from state import get_or_create_session, mark_dirty, _save_session, _load_session, _sanitize_session_id
+import session_store as state_module
+from session_store import get_or_create_session, mark_dirty, _save_session, _load_session, _sanitize_session_id
 from models.game_state import GameState
 from tests.conftest import make_card
 

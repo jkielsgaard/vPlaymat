@@ -1,3 +1,4 @@
+"""Tests for GameState serialisation — to_dict, to_persist_dict, from_dict, and expiry logic."""
 import time
 import pytest
 

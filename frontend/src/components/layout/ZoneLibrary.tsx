@@ -1,3 +1,4 @@
+// Library zone — stacked face-down card visual with card count label.
 import { CARD_BASE_W, CARD_BASE_H } from './ZoneBattlefield'
 import { FaceDownCard } from '../cards/FaceDownCard'
 

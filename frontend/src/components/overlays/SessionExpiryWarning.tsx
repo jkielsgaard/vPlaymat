@@ -1,3 +1,4 @@
+// Session expiry warning — modal shown 10 minutes before inactivity timeout with a Keep Playing button.
 interface SessionExpiryWarningProps {
   minutesLeft: number
   onExtend: () => void

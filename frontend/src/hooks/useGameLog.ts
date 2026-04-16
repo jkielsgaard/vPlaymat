@@ -1,3 +1,4 @@
+// Hook that manages the in-session game log — append entries and clear the log.
 import { useState, useCallback, useRef } from 'react'
 
 export interface LogEntry {

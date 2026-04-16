@@ -1,3 +1,4 @@
+// Reconnect banner — blocking overlay shown while the WebSocket is disconnected.
 import { useEffect, useState } from 'react'
 
 interface ReconnectBannerProps {

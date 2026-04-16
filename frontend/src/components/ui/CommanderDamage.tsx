@@ -1,3 +1,4 @@
+// Commander damage tracker — per-opponent counters with 21-damage loss alert.
 import { addCommanderDamage } from '../../api/rest'
 
 interface CommanderDamageProps {

@@ -1,9 +1,12 @@
+// WebSocket hook — connects to the backend, caches state in localStorage, and reconnects on drop.
 import { useEffect, useRef, useState } from 'react'
 import type { GameState } from '../types/game'
 import { getOrCreateSessionId } from './useSession'
 
 const RECONNECT_DELAY_MS = 2000
 const STATE_CACHE_KEY = 'vmagic-last-state'
+// Increment when GameState gains a new required field so stale caches are discarded.
+const CACHE_VERSION = 1
 
 function getWsUrl(): string {
   const explicit = import.meta.env.VITE_WS_URL as string | undefined
@@ -14,17 +17,24 @@ function getWsUrl(): string {
 }
 
 // Defaults for fields added after the initial release — ensures old cached
-// states are valid after a version upgrade.
+// states are valid after a version upgrade within the same cache version.
 const GAME_STATE_DEFAULTS: Partial<GameState> = {
   graveyard_order: [],
+}
+
+interface CachedEntry {
+  v: number
+  state: GameState
 }
 
 function loadCachedState(): GameState | null {
   try {
     const raw = localStorage.getItem(STATE_CACHE_KEY)
     if (!raw) return null
-    const parsed = JSON.parse(raw) as GameState
-    return { ...GAME_STATE_DEFAULTS, ...parsed } as GameState
+    const entry = JSON.parse(raw) as CachedEntry
+    // Discard the cache if the version doesn't match — required fields may have changed.
+    if (entry.v !== CACHE_VERSION) return null
+    return { ...GAME_STATE_DEFAULTS, ...entry.state } as GameState
   } catch {
     return null
   }
@@ -32,7 +42,8 @@ function loadCachedState(): GameState | null {
 
 function saveState(state: GameState): void {
   try {
-    localStorage.setItem(STATE_CACHE_KEY, JSON.stringify(state))
+    const entry: CachedEntry = { v: CACHE_VERSION, state }
+    localStorage.setItem(STATE_CACHE_KEY, JSON.stringify(entry))
   } catch {
     // Storage full or unavailable — skip silently
   }

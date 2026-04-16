@@ -1,3 +1,4 @@
+// Zone viewer overlay — scrollable grid of cards in graveyard or exile, rendered in a portal.
 import { useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import type { Card } from '../../types/game'

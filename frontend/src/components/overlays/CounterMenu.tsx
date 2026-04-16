@@ -1,3 +1,4 @@
+// Counter menu — floating popover for adding, removing, and clearing card counters.
 import { createPortal } from 'react-dom'
 import { useEffect, useRef } from 'react'
 import type { Card } from '../../types/game'

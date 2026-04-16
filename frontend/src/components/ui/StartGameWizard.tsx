@@ -1,3 +1,4 @@
+// Start game wizard — multi-step modal for deck import, game mode, and commander setup.
 import { useState } from 'react'
 import { importDeck } from '../../api/rest'
 import { Portal } from './Portal'

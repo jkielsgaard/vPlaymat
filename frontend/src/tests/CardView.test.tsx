@@ -1,3 +1,4 @@
+// Tests for the CardView component — rendering, tap state, counters, and hover callbacks.
 import { render, screen, fireEvent } from '@testing-library/react'
 import { describe, it, expect, vi } from 'vitest'
 import { CardView } from '../components/cards/CardView'

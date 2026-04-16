@@ -1,3 +1,4 @@
+// CardView — renders a single card with tap rotation, face-down back, counters, and hover events.
 import type { Card } from '../../types/game'
 import { useSettingsContext } from '../../contexts/SettingsContext'
 import cardBackSvg from '../../assets/card-back.svg'

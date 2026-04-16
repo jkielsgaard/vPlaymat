@@ -1,3 +1,4 @@
+// Free-form battlefield zone — drag-and-drop, rubber-band selection, stacking, and z-order.
 import { useRef, useState, useCallback, useEffect } from 'react'
 import type { Card, Zone } from '../../types/game'
 import { CardView } from '../cards/CardView'

@@ -1,3 +1,4 @@
+// Tests for the LibraryBrowser component — card display and search filtering.
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { LibraryBrowser } from '../components/overlays/LibraryBrowser'
