@@ -68,7 +68,7 @@ A Magic: The Gathering virtual playmat for personal use during online play (Spel
 - Commander card scale and positioning options
 
 ### Spectator view
-- **Copy Spectator URL** (Game menu) generates a clean arena-only URL tied to your session
+- **Copy Spectator URL** (Game menu) generates a secure, short-lived URL with an opaque token — your session ID is never exposed
 - Use it as an **OBS Browser Source** to stream to Spelltable, Discord, or any platform
 - Or **share it directly** with another player — they open it in their browser and see your board live, no OBS or Spelltable account needed
 - Spectator view shows the left-side zone panel: library count, graveyard, and exile
@@ -87,7 +87,7 @@ A Magic: The Gathering virtual playmat for personal use during online play (Spel
 - Blocking overlay on connection loss — shows automatically when the server is unreachable and disappears when reconnected
 
 ### Settings
-- Arena size (width × height)
+- Arena size — S (1200×700), M (1440×840), L (1680×980) preset buttons, or Custom for any size
 - Card scale, card preview scale
 - Commander card scale and zone position
 - Zone viewer card scale, library browser height
@@ -175,13 +175,13 @@ Use the Spectator URL as an OBS Browser Source to stream your board to Spelltabl
 2. Open the **Game** menu and click **Copy Spectator URL**
 3. In OBS, click **+** in the Sources panel and choose **Browser**
 4. Paste the copied URL as the URL
-5. Set **Width** and **Height** to match your arena size in Settings (default **1280 × 720**)
+5. Set **Width** and **Height** to match your arena size in Settings (default **1200 × 700** with the S preset)
    > ⚠️ This must exactly match your arena size — if it is off the battlefield will be cropped or have black bars
 6. Click OK
 
 **If you see a black bar under the battlefield:**
 Your OBS scene canvas is larger than your browser source. Fix with one of these:
-- OBS → Settings → Video → set Base (Canvas) Resolution to **1280 × 720**
+- OBS → Settings → Video → set Base (Canvas) Resolution to match your arena size (e.g. **1200 × 700** for the S preset)
 - Or right-click the source → **Transform → Fit to screen** to scale it up to fill your canvas
 
 **Sending to Spelltable / Discord:**
@@ -209,7 +209,7 @@ If you prefer not to use the Browser Source, you can capture your browser window
 
 #### General tips
 
-- The **arena size** in vPlaymat Settings (default 1280 × 720) should match your OBS canvas and your stream output resolution for the cleanest result
+- The **arena size** in vPlaymat Settings (default 1200 × 700 with the S preset) should match your OBS canvas and your stream output resolution for the cleanest result
 - Everything **below the arena** (hand, card preview, buttons) is never visible — it stays private
 - If you change your arena size in Settings, update the Browser Source dimensions in OBS to match
 

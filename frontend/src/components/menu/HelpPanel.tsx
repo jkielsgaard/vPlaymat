@@ -157,7 +157,7 @@ export function HelpPanel({ onClose }: HelpPanelProps) {
               <li>Open vPlaymat and import your deck — this is where you play</li>
               <li>Game menu → <strong className="text-gray-200">Copy Spectator URL</strong></li>
               <li>In OBS, click <strong className="text-gray-200">+</strong> in the Sources panel and choose <strong className="text-gray-200">Browser</strong></li>
-              <li>Paste the URL and set <strong className="text-gray-200">Width × Height</strong> to match your arena size in Settings (default 1280 × 720)</li>
+              <li>Paste the URL and set <strong className="text-gray-200">Width × Height</strong> to match your arena size in Settings (default 1200 × 700 with the S preset)</li>
               <li>Click OK</li>
             </ol>
             <p className="text-amber-400/80 text-[11px]">
@@ -165,7 +165,7 @@ export function HelpPanel({ onClose }: HelpPanelProps) {
             </p>
             <p className="text-[11px]">
               <strong className="text-gray-300">Black bar below the battlefield?</strong>{' '}
-              OBS → Settings → Video → set Base Resolution to <strong className="text-gray-200">1280 × 720</strong>, or right-click the source → <strong className="text-gray-200">Transform → Fit to screen</strong>.
+              OBS → Settings → Video → set Base Resolution to match your arena size (e.g. <strong className="text-gray-200">1200 × 700</strong> for the S preset), or right-click the source → <strong className="text-gray-200">Transform → Fit to screen</strong>.
             </p>
             <p className="text-[11px] text-gray-300">Sending to Spelltable / Discord:</p>
             <ol className="list-decimal list-inside space-y-1 ml-1 text-[11px]" start={6}>
@@ -186,7 +186,7 @@ export function HelpPanel({ onClose }: HelpPanelProps) {
 
             <p className="text-gray-300 font-medium pt-1">General tips</p>
             <ul className="list-disc list-inside space-y-0.5 ml-1 text-[11px]">
-              <li>The <strong className="text-gray-200">arena size</strong> in Settings (default 1280 × 720) should match your OBS canvas for the cleanest result</li>
+              <li>The <strong className="text-gray-200">arena size</strong> in Settings (default 1200 × 700 with the S preset) should match your OBS canvas for the cleanest result</li>
               <li>Everything <strong className="text-gray-200">below the arena</strong> (hand, card preview, buttons) is never visible — it stays private</li>
               <li>If you change your arena size in Settings, update the Browser Source dimensions in OBS to match</li>
             </ul>
@@ -238,7 +238,7 @@ export function HelpPanel({ onClose }: HelpPanelProps) {
             >
               GitHub
             </a>
-            . Version v1.4.5.
+            . Version v1.6.0.
           </p>
         </Section>
 
