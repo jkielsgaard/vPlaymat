@@ -14,9 +14,9 @@ import { useSessionExpiry } from './hooks/useSessionExpiry'
 import { ToastProvider } from './contexts/ToastContext'
 import * as api from './api/rest'
 
-// Detect spectator mode — ?spectate=1 (or legacy ?obs=1) in the URL
+// Detect spectator mode — presence of ?token= in the URL
 const urlParams = new URLSearchParams(window.location.search)
-const IS_SPECTATOR = urlParams.get('spectate') === '1' || urlParams.get('obs') === '1'
+const IS_SPECTATOR = urlParams.has('token')
 
 const BETA_DISMISSED_KEY = 'vmagic-beta-dismissed'
 

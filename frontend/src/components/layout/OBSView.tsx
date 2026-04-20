@@ -30,7 +30,7 @@ const spectatorSettings = {
 }
 
 export function SpectatorView() {
-  const { gameState } = useBoard()
+  const { gameState, tokenRejected } = useBoard()
   const { settings: sprSettings, update: updateSpr } = useSpectatorSettings()
   const [hoveredCard, setHoveredCard] = useState<Card | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
@@ -55,6 +55,20 @@ export function SpectatorView() {
     document.body.style.padding = '0'
     document.body.style.overflow = 'hidden'
   }, [])
+
+  if (tokenRejected) {
+    return (
+      <div
+        style={{ width: '100vw', height: '100vh', background: '#1a2e1a' }}
+        className="flex items-center justify-center"
+      >
+        <div className="text-center">
+          <div className="text-gold text-lg font-semibold mb-2">Spectator link not found</div>
+          <div className="text-gray-400 text-sm">This link is invalid or has expired.</div>
+        </div>
+      </div>
+    )
+  }
 
   if (!gameState) {
     return (

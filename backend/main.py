@@ -14,10 +14,10 @@ from slowapi.errors import RateLimitExceeded
 
 from limiter import limiter
 from routers import cards, deck, game
-from session_store import flush_loop, cleanup_loop, get_or_create_session, _sanitize_session_id
+from session_store import flush_loop, cleanup_loop, get_or_create_session, get_session_id_for_token, _sanitize_session_id
 from websocket_manager import broadcast_state, manager
 
-APP_VERSION = "v1.4.5"
+APP_VERSION = "v1.6.0"
 
 app = FastAPI(title="vPlaymat API")
 app.state.limiter = limiter
@@ -71,6 +71,7 @@ async def health():
 async def websocket_endpoint(
     websocket: WebSocket,
     session_id: Optional[str] = Query(default=None),
+    spectator_token: Optional[str] = Query(default=None),
 ):
     origin = websocket.headers.get("origin", "")
     if origin and origin not in ALLOWED_ORIGINS:
@@ -78,7 +79,16 @@ async def websocket_endpoint(
         await websocket.close(code=1008)
         return
 
-    sid = _sanitize_session_id(session_id or "default")
+    if spectator_token:
+        sid = get_session_id_for_token(spectator_token)
+        if sid is None:
+            logger.warning("WebSocket rejected — unknown spectator_token")
+            await websocket.accept()
+            await websocket.close(code=1008)
+            return
+    else:
+        sid = _sanitize_session_id(session_id or "default")
+
     await manager.connect(websocket, sid)
     state = get_or_create_session(sid)
 

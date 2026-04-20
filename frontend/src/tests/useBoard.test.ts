@@ -12,7 +12,7 @@ const mockClose = vi.fn()
 let mockInstance: {
   onopen: (() => void) | null
   onmessage: ((e: { data: string }) => void) | null
-  onclose: (() => void) | null
+  onclose: ((e: { code: number }) => void) | null
   onerror: (() => void) | null
   close: typeof mockClose
   readyState: number
@@ -128,10 +128,41 @@ describe('useBoard', () => {
       mockInstance.onopen?.()
     })
     act(() => {
-      mockInstance.onclose?.()
+      mockInstance.onclose?.({ code: 1000 })
     })
 
     expect(result.current.connected).toBe(false)
+  })
+
+  it('sets tokenRejected when close code 1008 arrives with a token URL param', () => {
+    Object.defineProperty(window, 'location', {
+      value: { search: '?token=BADTOKEN' },
+      configurable: true,
+    })
+
+    const { result } = renderHook(() => useBoard())
+
+    act(() => {
+      mockInstance.onclose?.({ code: 1008 })
+    })
+
+    expect(result.current.tokenRejected).toBe(true)
+    expect(result.current.connected).toBe(false)
+
+    Object.defineProperty(window, 'location', {
+      value: { search: '' },
+      configurable: true,
+    })
+  })
+
+  it('does not set tokenRejected on normal close without token URL param', () => {
+    const { result } = renderHook(() => useBoard())
+
+    act(() => {
+      mockInstance.onclose?.({ code: 1008 })
+    })
+
+    expect(result.current.tokenRejected).toBe(false)
   })
 
   it('closes WebSocket on unmount', () => {

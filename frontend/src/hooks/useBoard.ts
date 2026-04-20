@@ -53,16 +53,23 @@ export function useBoard() {
   // Initialise with cached state so the UI is immediately visible on reconnect
   const [gameState, setGameState] = useState<GameState | null>(loadCachedState)
   const [connected, setConnected] = useState(false)
+  const [tokenRejected, setTokenRejected] = useState(false)
   const stopRef = useRef(false)
 
   useEffect(() => {
     stopRef.current = false
     let ws: WebSocket
-    // OBS view passes session_id in the URL — use it directly so the OBS browser
-    // connects to the same session as the player's browser without sharing localStorage.
-    const urlSessionId = new URLSearchParams(window.location.search).get('session_id')
-    const sessionId = urlSessionId || getOrCreateSessionId()
-    const wsUrl = `${getWsUrl()}?session_id=${encodeURIComponent(sessionId)}`
+    // Spectator/OBS view passes an opaque token in the URL — resolve it server-side.
+    const params = new URLSearchParams(window.location.search)
+    const urlToken = params.get('token')
+    const urlSessionId = params.get('session_id')
+    let wsUrl: string
+    if (urlToken) {
+      wsUrl = `${getWsUrl()}?spectator_token=${encodeURIComponent(urlToken)}`
+    } else {
+      const sessionId = urlSessionId || getOrCreateSessionId()
+      wsUrl = `${getWsUrl()}?session_id=${encodeURIComponent(sessionId)}`
+    }
 
     function connect() {
       ws = new WebSocket(wsUrl)
@@ -79,8 +86,14 @@ export function useBoard() {
         }
       }
 
-      ws.onclose = () => {
+      ws.onclose = (event: CloseEvent) => {
         setConnected(false)
+        // Code 1008 from the server means the spectator token was not recognised.
+        // Stop reconnecting and surface the error to the UI.
+        if (urlToken && event.code === 1008) {
+          setTokenRejected(true)
+          return
+        }
         if (!stopRef.current) {
           setTimeout(connect, RECONNECT_DELAY_MS)
         }
@@ -97,5 +110,5 @@ export function useBoard() {
     }
   }, [])
 
-  return { gameState, connected }
+  return { gameState, connected, tokenRejected }
 }

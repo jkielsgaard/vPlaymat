@@ -4,6 +4,8 @@ import json
 import logging
 import os
 import re
+import secrets
+import string
 from typing import Dict, Optional, Set
 
 from models.game_state import GameState
@@ -94,6 +96,33 @@ _sessions: Dict[str, GameState] = {}
 # session_id → True if state has changed since last flush
 _dirty: Set[str] = set()
 
+# ---------------------------------------------------------------------------
+# Spectator token store
+# ---------------------------------------------------------------------------
+
+_TOKEN_ALPHABET = string.ascii_uppercase + string.digits
+_TOKEN_LENGTH = 8
+
+# token → session_id  (used for WebSocket lookup and write-endpoint rejection)
+_spectator_tokens: Dict[str, str] = {}
+# session_id → token  (used to return the same token on repeated calls)
+_session_to_token: Dict[str, str] = {}
+
+
+def generate_spectator_token(session_id: str) -> str:
+    """Return the existing spectator token for this session, or create a new one."""
+    if session_id in _session_to_token:
+        return _session_to_token[session_id]
+    token = ''.join(secrets.choice(_TOKEN_ALPHABET) for _ in range(_TOKEN_LENGTH))
+    _spectator_tokens[token] = session_id
+    _session_to_token[session_id] = token
+    return token
+
+
+def get_session_id_for_token(token: str) -> Optional[str]:
+    """Return the session_id that owns this spectator token, or None if unknown."""
+    return _spectator_tokens.get(token)
+
 
 def get_or_create_session(session_id: str) -> GameState:
     """
@@ -142,6 +171,12 @@ def mark_dirty(session_id: str) -> None:
     _dirty.add(session_id)
 
 
+def _evict_spectator_token(session_id: str) -> None:
+    token = _session_to_token.pop(session_id, None)
+    if token:
+        _spectator_tokens.pop(token, None)
+
+
 # ---------------------------------------------------------------------------
 # Background maintenance loops
 # ---------------------------------------------------------------------------
@@ -183,6 +218,7 @@ async def cleanup_loop() -> None:
                     del _sessions[session_id]
                     _dirty.discard(session_id)
                     _delete_session_file(session_id)
+                    _evict_spectator_token(session_id)
                     deleted += 1
                 continue  # still active in memory — skip file check
             # Not in memory — load just to read last_active and check expiry

@@ -4,6 +4,8 @@ from session_store import (  # noqa: F401
     _sanitize_session_id, _session_path, _ensure_dir,
     _save_session, _load_session, _delete_session_file,
     _sessions, _dirty, get_or_create_session, mark_dirty,
+    _spectator_tokens, _session_to_token,
+    generate_spectator_token, get_session_id_for_token,
     flush_loop, cleanup_loop,
 )
 from websocket_manager import ConnectionManager, manager, broadcast_state  # noqa: F401

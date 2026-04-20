@@ -1,15 +1,16 @@
 """Per-card REST endpoints — tap, move, flip, transform, counters, and position updates."""
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 
+from dependencies import forbid_spectator_token
 from exceptions import CardNotFoundError
 from session_store import get_or_create_session
 from websocket_manager import broadcast_state
 from models.game_state import VALID_ZONES
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(forbid_spectator_token)])
 
 
 class MoveRequest(BaseModel):

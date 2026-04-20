@@ -130,3 +130,6 @@ export const touchSession = () =>
 export const clearGame = () =>
   request<{ ok: boolean }>('POST', '/game/clear')
 
+export const getSpectatorToken = () =>
+  request<{ token: string }>('POST', '/game/spectator-token')
+

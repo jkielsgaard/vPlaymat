@@ -66,7 +66,7 @@ Browser (React) ←──WebSocket──→ FastAPI (Python)
 - Each browser gets a **session ID** stored in `localStorage` (`useSession.ts`).
 - The backend maintains one `GameState` object per session ID in memory (`state.py`).
 - Sessions are persisted to disk (JSON files in `/app/data/sessions/`) every 5 seconds via a background flush loop, and expire after 1 hour of inactivity.
-- The OBS view (`?obs=1` URL param) connects to the same session via a `session_id` URL param — it is read-only and mirrors the player's board live.
+- The spectator/OBS view (`?token=<token>` URL param) connects via a server-issued opaque token — it is read-only and mirrors the player's board live. Copy the spectator URL from the Game menu.
 
 ### Key files
 

@@ -1,9 +1,10 @@
 """Deck import REST endpoints — parse a decklist, fetch card data, and reset the session."""
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel
 
+from dependencies import forbid_spectator_token
 from models.card import Card
 from services.deck_parser import parse_decklist
 from services.scryfall import get_cards_batch
@@ -11,7 +12,7 @@ from session_store import get_or_create_session
 from websocket_manager import broadcast_state
 from limiter import limiter
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(forbid_spectator_token)])
 
 VALID_MODES = {"normal", "commander"}
 

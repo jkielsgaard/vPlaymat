@@ -3,8 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Portal } from '../ui/Portal'
 import { StartGameWizard } from '../ui/StartGameWizard'
 import { ReleaseNotesPanel } from './ReleaseNotesPanel'
-import { useSettingsContext } from '../../contexts/SettingsContext'
-import { getOrCreateSessionId } from '../../hooks/useSession'
+import { getSpectatorToken } from '../../api/rest'
 
 interface GameMenuProps {
   onNewGame: () => void
@@ -18,17 +17,18 @@ export function GameMenu({ onNewGame, onToggleLog }: GameMenuProps) {
   const [spectatorCopied, setSpectatorCopied] = useState(false)
   const [releaseNotesOpen, setReleaseNotesOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
-  const { settings } = useSettingsContext()
 
-  function copySpectatorUrl() {
-    const sessionId = getOrCreateSessionId()
-    const { cardScale } = settings
-    const base = `${window.location.origin}${window.location.pathname}`
-    const url = `${base}?spectate=1&session_id=${encodeURIComponent(sessionId)}&scale=${cardScale}`
-    navigator.clipboard.writeText(url).then(() => {
+  async function copySpectatorUrl() {
+    try {
+      const { token } = await getSpectatorToken()
+      const base = `${window.location.origin}${window.location.pathname}`
+      const url = `${base}?token=${encodeURIComponent(token)}`
+      await navigator.clipboard.writeText(url)
       setSpectatorCopied(true)
       setTimeout(() => setSpectatorCopied(false), 2000)
-    })
+    } catch {
+      // silently ignore — clipboard or network error
+    }
     setOpen(false)
   }
 

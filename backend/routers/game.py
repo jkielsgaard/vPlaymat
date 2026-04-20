@@ -1,13 +1,14 @@
 """Game action REST endpoints — draw, life, turn, tokens, zone viewers, and session control."""
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 
+from dependencies import forbid_spectator_token
 from exceptions import EmptyLibraryError, ScryfallAPIError
 from services.scryfall import search_tokens
-from session_store import get_or_create_session, mark_dirty
+from session_store import generate_spectator_token, get_or_create_session, mark_dirty
 from websocket_manager import broadcast_state
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(forbid_spectator_token)])
 
 
 class DrawRequest(BaseModel):
@@ -206,6 +207,13 @@ async def set_spectator_zone_viewing(request: SpectatorZoneViewingRequest, sessi
     gs.spectator_zone_viewing = request.enabled
     await broadcast_state(session_id or "default")
     return {"ok": True}
+
+
+@router.post("/spectator-token")
+async def get_spectator_token(session_id: str = Query(default="")):
+    """Generate or return the spectator token for this session."""
+    token = generate_spectator_token(session_id or "default")
+    return {"token": token}
 
 
 @router.post("/clear")

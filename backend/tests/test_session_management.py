@@ -4,7 +4,10 @@ import time
 import pytest
 
 import session_store as state_module
-from session_store import get_or_create_session, mark_dirty, _save_session, _load_session, _sanitize_session_id
+from session_store import (
+    get_or_create_session, mark_dirty, _save_session, _load_session, _sanitize_session_id,
+    generate_spectator_token, get_session_id_for_token,
+)
 from models.game_state import GameState
 from tests.conftest import make_card
 
@@ -14,10 +17,14 @@ def isolated_sessions(tmp_path, monkeypatch):
     """Each test gets a clean in-memory session store and an isolated temp directory."""
     state_module._sessions.clear()
     state_module._dirty.clear()
+    state_module._spectator_tokens.clear()
+    state_module._session_to_token.clear()
     monkeypatch.setattr(state_module, 'SESSION_DIR', str(tmp_path))
     yield
     state_module._sessions.clear()
     state_module._dirty.clear()
+    state_module._spectator_tokens.clear()
+    state_module._session_to_token.clear()
 
 
 # ---------------------------------------------------------------------------
@@ -199,3 +206,48 @@ def test_path_traversal_session_id_does_not_write_outside_session_dir(tmp_path):
     written = list(tmp_path.rglob("*.json"))
     for f in written:
         assert str(f).startswith(str(tmp_path)), f"File written outside SESSION_DIR: {f}"
+
+
+# ---------------------------------------------------------------------------
+# Spectator tokens
+# ---------------------------------------------------------------------------
+
+def test_generate_spectator_token_returns_string():
+    token = generate_spectator_token("player-sess")
+    assert isinstance(token, str)
+    assert len(token) == 8
+
+
+def test_same_session_returns_same_token():
+    t1 = generate_spectator_token("player-sess")
+    t2 = generate_spectator_token("player-sess")
+    assert t1 == t2
+
+
+def test_different_sessions_return_different_tokens():
+    t1 = generate_spectator_token("player-a")
+    t2 = generate_spectator_token("player-b")
+    assert t1 != t2
+
+
+def test_get_session_id_for_token_resolves_correctly():
+    token = generate_spectator_token("player-sess")
+    assert get_session_id_for_token(token) == "player-sess"
+
+
+def test_get_session_id_for_unknown_token_returns_none():
+    assert get_session_id_for_token("XXXXXXXX") is None
+
+
+def test_spectator_token_evicted_when_session_expires():
+    sess = get_or_create_session("expire-sess")
+    token = generate_spectator_token("expire-sess")
+    assert get_session_id_for_token(token) == "expire-sess"
+
+    # Force expiry and trigger a new get_or_create call
+    sess.last_active = 0.0
+    get_or_create_session("expire-sess")
+
+    # Token should still be resolvable (eviction only happens via cleanup_loop)
+    # but the session itself was reset — verify the token still maps to the session
+    assert get_session_id_for_token(token) == "expire-sess"

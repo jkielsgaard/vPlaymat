@@ -5,8 +5,12 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { GameMenu } from '../components/menu/GameMenu'
 
 vi.mock('../api/rest', () => ({
-  importDeck: vi.fn().mockResolvedValue({ loaded: 10, errors: [] }),
+  importDeck: vi.fn(),
+  getSpectatorToken: vi.fn(),
 }))
+
+import * as restApi from '../api/rest'
+const mockGetSpectatorToken = vi.mocked(restApi.getSpectatorToken)
 
 describe('GameMenu', () => {
   const onNewGame = vi.fn()
@@ -63,6 +67,8 @@ describe('GameMenu — Copy Spectator URL', () => {
   beforeEach(() => {
     localStorage.clear()
     sessionStorage.clear()
+    mockGetSpectatorToken.mockClear()
+    mockGetSpectatorToken.mockResolvedValue({ token: 'TESTTOKEN1' })
     writeText = vi.fn().mockResolvedValue(undefined)
     Object.defineProperty(navigator, 'clipboard', {
       value: { writeText },
@@ -76,16 +82,17 @@ describe('GameMenu — Copy Spectator URL', () => {
     expect(screen.getByText(/copy spectator url/i)).toBeInTheDocument()
   })
 
-  it('copies a URL with spectate=1, session_id, and scale to the clipboard', async () => {
+  it('copies a URL with spectate=1, token, and scale to the clipboard', async () => {
     render(<GameMenu onNewGame={vi.fn()} onToggleLog={vi.fn()} />)
     await userEvent.click(screen.getByRole('button', { name: /game/i }))
     await userEvent.click(screen.getByText(/copy spectator url/i))
 
-    expect(writeText).toHaveBeenCalledTimes(1)
+    await waitFor(() => expect(writeText).toHaveBeenCalledTimes(1))
     const url = writeText.mock.calls[0][0] as string
-    expect(url).toContain('spectate=1')
-    expect(url).toContain('session_id=')
-    expect(url).toContain('scale=')
+    expect(url).toContain('token=TESTTOKEN1')
+    expect(url).not.toContain('spectate=')
+    expect(url).not.toContain('scale=')
+    expect(url).not.toContain('session_id=')
   })
 
   it('closes the dropdown after copying', async () => {
