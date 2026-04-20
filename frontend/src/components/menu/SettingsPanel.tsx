@@ -3,9 +3,16 @@ import { useState } from 'react'
 import type { CommanderZoneCorner, Settings } from '../../hooks/useSettings'
 
 const ARENA_MIN_W = 800
-const ARENA_MAX_W = 3840
+const ARENA_MAX_W = 1680
 const ARENA_MIN_H = 450
-const ARENA_MAX_H = 2160
+const ARENA_MAX_H = 980
+
+// Sizes follow the standard MTG playmat ratio (24"×14" = 12:7 ≈ 1.71:1)
+const SIZE_PRESETS = [
+  { label: 'S', width: 1200, height: 700 },
+  { label: 'M', width: 1440, height: 840 },
+  { label: 'L', width: 1680, height: 980 },
+]
 
 const BG_PRESETS = [
   { label: 'Felt green', value: '#1a2e1a' },
@@ -50,8 +57,17 @@ function Group({ title, children }: { title: string; children: React.ReactNode }
 }
 
 export function SettingsPanel({ settings, onUpdate, onClose, spectatorZoneViewing, onToggleSpectatorZoneViewing }: SettingsPanelProps) {
+  const isPreset = SIZE_PRESETS.some(p => p.width === settings.arenaWidth && p.height === settings.arenaHeight)
+  const [showCustom, setShowCustom] = useState(!isPreset)
   const [widthInput, setWidthInput] = useState(String(settings.arenaWidth))
   const [heightInput, setHeightInput] = useState(String(settings.arenaHeight))
+
+  function selectPreset(p: typeof SIZE_PRESETS[0]) {
+    setShowCustom(false)
+    setWidthInput(String(p.width))
+    setHeightInput(String(p.height))
+    onUpdate({ arenaWidth: p.width, arenaHeight: p.height })
+  }
 
   function commitWidth() {
     const v = Math.max(ARENA_MIN_W, Math.min(ARENA_MAX_W, parseInt(widthInput) || ARENA_MIN_W))
@@ -94,40 +110,68 @@ export function SettingsPanel({ settings, onUpdate, onClose, spectatorZoneViewin
           {/* Arena size */}
           <div>
             <h3 className="text-gray-400 text-xs font-medium mb-2">Size</h3>
-            <div className="flex gap-3 items-center">
-              <div className="flex flex-col gap-1 flex-1">
-                <label htmlFor="arena-width" className="text-gray-500 text-xs">Width (px)</label>
-                <input
-                  id="arena-width"
-                  aria-label="Width"
-                  type="number"
-                  min={ARENA_MIN_W}
-                  max={ARENA_MAX_W}
-                  value={widthInput}
-                  onChange={(e) => setWidthInput(e.target.value)}
-                  onBlur={commitWidth}
-                  onKeyDown={(e) => e.key === 'Enter' && commitWidth()}
-                  className="bg-mtg-bg border border-felt-light rounded px-2 py-1 text-sm text-gray-200 w-full"
-                />
-              </div>
-              <span className="text-gray-500 mt-4">×</span>
-              <div className="flex flex-col gap-1 flex-1">
-                <label htmlFor="arena-height" className="text-gray-500 text-xs">Height (px)</label>
-                <input
-                  id="arena-height"
-                  aria-label="Height"
-                  type="number"
-                  min={ARENA_MIN_H}
-                  max={ARENA_MAX_H}
-                  value={heightInput}
-                  onChange={(e) => setHeightInput(e.target.value)}
-                  onBlur={commitHeight}
-                  onKeyDown={(e) => e.key === 'Enter' && commitHeight()}
-                  className="bg-mtg-bg border border-felt-light rounded px-2 py-1 text-sm text-gray-200 w-full"
-                />
-              </div>
+            <div className="flex gap-2 flex-wrap">
+              {SIZE_PRESETS.map((p) => (
+                <button
+                  key={p.label}
+                  onClick={() => selectPreset(p)}
+                  className={`px-3 py-1.5 text-xs rounded border transition-colors text-left ${
+                    !showCustom && settings.arenaWidth === p.width && settings.arenaHeight === p.height
+                      ? 'bg-gold text-black border-gold font-semibold'
+                      : 'bg-felt border-felt-light text-gray-300 hover:border-gold/40'
+                  }`}
+                >
+                  <div>{p.label}</div>
+                  <div className="opacity-60">{p.width}×{p.height}</div>
+                </button>
+              ))}
+              <button
+                onClick={() => setShowCustom(true)}
+                className={`px-3 py-1.5 text-xs rounded border transition-colors ${
+                  showCustom
+                    ? 'bg-gold text-black border-gold font-semibold'
+                    : 'bg-felt border-felt-light text-gray-300 hover:border-gold/40'
+                }`}
+              >
+                Custom
+              </button>
             </div>
-            <p className="text-gray-600 text-xs mt-1">Min {ARENA_MIN_W}×{ARENA_MIN_H} — Max {ARENA_MAX_W}×{ARENA_MAX_H}</p>
+
+            {showCustom && (
+              <div className="flex gap-3 items-center mt-3">
+                <div className="flex flex-col gap-1 flex-1">
+                  <label htmlFor="arena-width" className="text-gray-500 text-xs">Width (px)</label>
+                  <input
+                    id="arena-width"
+                    aria-label="Width"
+                    type="number"
+                    min={ARENA_MIN_W}
+                    max={ARENA_MAX_W}
+                    value={widthInput}
+                    onChange={(e) => setWidthInput(e.target.value)}
+                    onBlur={commitWidth}
+                    onKeyDown={(e) => e.key === 'Enter' && commitWidth()}
+                    className="bg-mtg-bg border border-felt-light rounded px-2 py-1 text-sm text-gray-200 w-full"
+                  />
+                </div>
+                <span className="text-gray-500 mt-4">×</span>
+                <div className="flex flex-col gap-1 flex-1">
+                  <label htmlFor="arena-height" className="text-gray-500 text-xs">Height (px)</label>
+                  <input
+                    id="arena-height"
+                    aria-label="Height"
+                    type="number"
+                    min={ARENA_MIN_H}
+                    max={ARENA_MAX_H}
+                    value={heightInput}
+                    onChange={(e) => setHeightInput(e.target.value)}
+                    onBlur={commitHeight}
+                    onKeyDown={(e) => e.key === 'Enter' && commitHeight()}
+                    className="bg-mtg-bg border border-felt-light rounded px-2 py-1 text-sm text-gray-200 w-full"
+                  />
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Arena background */}

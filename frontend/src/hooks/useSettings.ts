@@ -23,8 +23,8 @@ export interface Settings {
 
 export const SETTINGS_DEFAULTS: Settings = {
   gameMode: 'normal',
-  arenaWidth: 1280,
-  arenaHeight: 720,
+  arenaWidth: 1200,
+  arenaHeight: 700,
   cardScale: 1.3,
   arenaBackground: '#1a2e1a',
   pageBackground: '#0d1a0d',

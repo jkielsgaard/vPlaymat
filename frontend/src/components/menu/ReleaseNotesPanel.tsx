@@ -50,6 +50,16 @@ export function ReleaseNotesPanel({ onClose }: ReleaseNotesPanelProps) {
             </button>
           </div>
 
+          <Version version="v1.6.0" date="April 2026">
+            <Item>Arena size presets — HD (1280×720), Full HD (1920×1080), and QHD (2560×1440) buttons replace the free-form number inputs; a Custom option still lets you enter any size</Item>
+          </Version>
+
+          <Version version="v1.5.0" date="April 2026">
+            <Item>Spectator URLs now use a short opaque token instead of the session ID — sharing the spectator link no longer exposes your write credentials</Item>
+            <Item>Write endpoints (draw, move, life, deck import, etc.) now reject requests carrying a spectator token with a 403 error</Item>
+            <Item>Spectator tokens are stable per session and automatically evicted when the session expires</Item>
+          </Version>
+
           <Version version="v1.4.5" date="April 2026">
             <Item>Session expiry warning — a modal appears 10 minutes before your session expires due to inactivity, with a Keep Playing button to extend it</Item>
             <Item>Sessions now expire after 1 hour of inactivity; the board is fully cleared and the import wizard re-appears</Item>
