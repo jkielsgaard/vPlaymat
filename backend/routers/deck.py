@@ -40,12 +40,18 @@ async def import_deck(request: Request, body: DeckImportRequest, session_id: str
     cards: list[Card] = []
     errors: list[str] = []
 
-    unique_names = list({name for name, _ in parsed})
-    found, not_found_names = await get_cards_batch(unique_names)
+    # Deduplicate by name, preserving set+number from the first occurrence.
+    seen: dict[str, tuple[str, str, str]] = {}
+    for name, _, set_code, col_num in parsed:
+        if name not in seen:
+            seen[name] = (name, set_code, col_num)
+    unique_entries = list(seen.values())
+
+    found, not_found_names = await get_cards_batch(unique_entries)
     for nf in not_found_names:
         errors.append(f"Card not found: {nf}")
 
-    for name, count in parsed:
+    for name, count, _, _ in parsed:
         card_data = found.get(name)
         if card_data:
             for _ in range(count):

@@ -382,7 +382,7 @@ function parseDecklistNames(decklist: string): string[] {
   for (const line of decklist.split('\n')) {
     const trimmed = line.trim()
     if (!trimmed || trimmed.startsWith('//') || /^(Deck|Sideboard|Commander)$/i.test(trimmed)) continue
-    const match = trimmed.match(/^\d+\s+(.+?)(?:\s+\([A-Z0-9]+\)\s+\d+)?$/)
+    const match = trimmed.match(/^\d+\s+(.+?)(?:\s+\([A-Za-z0-9]+\)\s+\S+?(?:\s+\*[A-Z]\*)*)?$/)
     if (match) {
       const name = match[1].trim()
       if (!seen.has(name)) {

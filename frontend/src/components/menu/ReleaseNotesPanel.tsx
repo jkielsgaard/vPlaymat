@@ -50,6 +50,11 @@ export function ReleaseNotesPanel({ onClose }: ReleaseNotesPanelProps) {
             </button>
           </div>
 
+          <Version version="v1.8.1" date="April 2026">
+            <Item>Deck import now handles all Moxfield collector number formats: plain digits, PLST-style (KTK-3, A25-50), promo star (131★), and foil marker (*F*) combinations</Item>
+            <Item>Set+number Scryfall lookup now falls back to name-only when the collector number can't be resolved — PLST reprints and promo cards import correctly</Item>
+          </Version>
+
           <Version version="v1.8.0" date="April 2026">
             <Item>Card hover preview position is now configurable — choose Outside battlefield (original behaviour, shown in the side panel) or Inside battlefield with a corner picker (top-left, top-right, bottom-left, bottom-right); not shown in the spectator view</Item>
             <Item>Battlefield z-order is now persisted to the backend so the spectator view always shows cards stacked in the same order as the player</Item>

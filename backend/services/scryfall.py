@@ -67,69 +67,118 @@ def _build_result(card_data: dict) -> dict:
 # Public API — batch (preferred for deck import)
 # ---------------------------------------------------------------------------
 
-async def get_cards_batch(names: List[str]) -> Tuple[Dict[str, dict], List[str]]:
+async def _fetch_chunk(
+    chunk: List[Tuple[str, str, str]],
+    client: httpx.AsyncClient,
+) -> Tuple[Dict[str, dict], List[Tuple[str, str, str]]]:
+    """
+    Send one /cards/collection request for up to 75 entries.
+
+    Uses set+number identifiers where available; falls back to name identifiers
+    otherwise. Returns (found_dict, unresolved_entries) where unresolved_entries
+    are the original (name, set_code, col_num) tuples that Scryfall did not return.
+    """
+    identifiers = []
+    set_num_to_name: Dict[Tuple[str, str], str] = {}
+    for name, set_code, col_num in chunk:
+        if set_code and col_num:
+            key = (set_code.lower(), col_num.lower())
+            set_num_to_name[key] = name
+            identifiers.append({"set": set_code.lower(), "collector_number": col_num.lower()})
+        else:
+            identifiers.append({"name": name})
+
+    try:
+        response = await client.post("/cards/collection", json={"identifiers": identifiers})
+    except httpx.HTTPError as exc:
+        raise ScryfallAPIError(f"HTTP error fetching card collection: {exc}") from exc
+
+    if response.status_code != 200:
+        raise ScryfallAPIError(f"Scryfall collection returned {response.status_code}")
+
+    body = response.json()
+
+    by_name: Dict[str, dict] = {}
+    by_set_num: Dict[Tuple[str, str], dict] = {}
+    for card_data in body.get("data", []):
+        result = _build_result(card_data)
+        by_name[card_data["name"].lower()] = result
+        if "set" in card_data and "collector_number" in card_data:
+            key = (card_data["set"].lower(), card_data["collector_number"].lower())
+            by_set_num[key] = result
+
+    found: Dict[str, dict] = {}
+    unresolved: List[Tuple[str, str, str]] = []
+    for name, set_code, col_num in chunk:
+        if set_code and col_num:
+            result = by_set_num.get((set_code.lower(), col_num.lower()))
+        else:
+            result = by_name.get(name.lower())
+
+        if result:
+            _cache[name.lower()] = result
+            found[name] = result
+        else:
+            unresolved.append((name, set_code, col_num))
+
+    return found, unresolved
+
+
+async def get_cards_batch(
+    entries: List[Tuple[str, str, str]],
+) -> Tuple[Dict[str, dict], List[str]]:
     """
     Fetch multiple cards from Scryfall using the /cards/collection endpoint.
-    Processes up to 75 unique names per HTTP request, so a 100-card deck
-    needs only 1-2 requests instead of ~80 sequential ones.
+    Processes up to 75 unique entries per HTTP request.
+
+    Each entry is (name, set_code, collector_number). When set_code and
+    collector_number are both non-empty the lookup uses set+number first
+    (required for flavour-titled reprints like Moxfield). If set+number
+    fails, the card is retried by name so PLST and other non-standard
+    collector numbers still resolve.
+    Results are always keyed by the requested name.
 
     Returns:
         found      – dict mapping each requested name to {"name", "image_uri"}
         not_found  – list of requested names Scryfall could not match
     """
     found: Dict[str, dict] = {}
-    uncached: List[str] = []
+    uncached: List[Tuple[str, str, str]] = []
 
-    for name in names:
+    for name, set_code, col_num in entries:
         cached = _cache.get(name.lower())
         if cached:
             found[name] = cached
         else:
-            uncached.append(name)
+            uncached.append((name, set_code, col_num))
 
     if not uncached:
         return found, []
 
-    not_found: List[str] = []
     client = _get_client()
 
-    # Scryfall collection endpoint accepts max 75 identifiers per request
+    # Pass 1: use set+number identifiers where available.
+    name_fallback: List[Tuple[str, str, str]] = []
     for i in range(0, len(uncached), 75):
-        chunk = uncached[i : i + 75]
-        try:
-            response = await client.post(
-                "/cards/collection",
-                json={"identifiers": [{"name": n} for n in chunk]},
-            )
-        except httpx.HTTPError as exc:
-            raise ScryfallAPIError(f"HTTP error fetching card collection: {exc}") from exc
+        chunk_found, unresolved = await _fetch_chunk(uncached[i : i + 75], client)
+        found.update(chunk_found)
+        # Cards with a set+number that Scryfall couldn't resolve get a name-only retry.
+        # Cards without set+number that Scryfall couldn't resolve are truly not found.
+        for name, set_code, col_num in unresolved:
+            if set_code and col_num:
+                name_fallback.append((name, "", ""))
 
-        if response.status_code != 200:
-            raise ScryfallAPIError(
-                f"Scryfall collection returned {response.status_code}"
-            )
+    # Pass 2: retry set+number failures using name-only lookup.
+    not_found: List[str] = []
+    for i in range(0, len(name_fallback), 75):
+        chunk_found, unresolved = await _fetch_chunk(name_fallback[i : i + 75], client)
+        found.update(chunk_found)
+        not_found.extend(name for name, _, _ in unresolved)
 
-        body = response.json()
-
-        # Map canonical (lowercased) name → result for matching back to requested names
-        canonical: Dict[str, dict] = {}
-        for card_data in body.get("data", []):
-            result = _build_result(card_data)
-            canonical[card_data["name"].lower()] = result
-
-        for req_name in chunk:
-            result = canonical.get(req_name.lower())
-            if result:
-                _cache[req_name.lower()] = result
-                found[req_name] = result
-            else:
-                not_found.append(req_name)
-
-        # Track any explicit not_found identifiers Scryfall returns
-        for nf in body.get("not_found", []):
-            nf_name = nf.get("name", "")
-            if nf_name and nf_name not in not_found:
-                not_found.append(nf_name)
+    # Collect names that failed both passes (no set+number, name-only also failed).
+    for name, set_code, col_num in uncached:
+        if name not in found and name not in not_found:
+            not_found.append(name)
 
     return found, not_found
 

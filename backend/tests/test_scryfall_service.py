@@ -126,7 +126,8 @@ async def test_batch_fetch_returns_all_found_cards(mock_scryfall):
     mock_scryfall.post("/cards/collection").mock(
         return_value=httpx.Response(200, json={"data": [bolt, counterspell], "not_found": []})
     )
-    found, not_found = await scryfall_service.get_cards_batch(["Lightning Bolt", "Counterspell"])
+    entries = [("Lightning Bolt", "", ""), ("Counterspell", "", "")]
+    found, not_found = await scryfall_service.get_cards_batch(entries)
     assert found["Lightning Bolt"]["image_uri"] == "https://example.com/bolt.jpg"
     assert found["Counterspell"]["image_uri"] == "https://example.com/cs.jpg"
     assert not_found == []
@@ -142,7 +143,8 @@ async def test_batch_fetch_reports_not_found(mock_scryfall):
             "not_found": [{"name": "Fake Card"}],
         })
     )
-    found, not_found = await scryfall_service.get_cards_batch(["Lightning Bolt", "Fake Card"])
+    entries = [("Lightning Bolt", "", ""), ("Fake Card", "", "")]
+    found, not_found = await scryfall_service.get_cards_batch(entries)
     assert "Lightning Bolt" in found
     assert "Fake Card" not in found
     assert "Fake Card" in not_found
@@ -155,9 +157,9 @@ async def test_batch_fetch_uses_cache_for_known_cards(mock_scryfall):
         return_value=httpx.Response(200, json={"data": [bolt], "not_found": []})
     )
     # Prime cache via first batch call
-    await scryfall_service.get_cards_batch(["Lightning Bolt"])
+    await scryfall_service.get_cards_batch([("Lightning Bolt", "", "")])
     # Second call should serve from cache without hitting the network
-    found, _ = await scryfall_service.get_cards_batch(["Lightning Bolt"])
+    found, _ = await scryfall_service.get_cards_batch([("Lightning Bolt", "", "")])
     assert found["Lightning Bolt"]["name"] == "Lightning Bolt"
     assert mock_scryfall.calls.call_count == 1  # only the first call made a request
 
@@ -181,10 +183,65 @@ async def test_batch_fetch_splits_into_chunks_of_75(mock_scryfall):
         return httpx.Response(200, json={"data": cards[start:end], "not_found": []})
 
     mock_scryfall.post("/cards/collection").mock(side_effect=side_effect)
-    found, not_found = await scryfall_service.get_cards_batch(names)
+    entries = [(n, "", "") for n in names]
+    found, not_found = await scryfall_service.get_cards_batch(entries)
     assert call_count == 2
     assert len(found) == 80
     assert not_found == []
+
+
+@pytest.mark.asyncio
+async def test_batch_fetch_uses_set_number_when_available(mock_scryfall):
+    """When set+number are provided, the lookup uses them so flavour-titled cards resolve correctly."""
+    # Scryfall returns the canonical name "Dogmeat, Ever Loyal" even though we requested
+    # "Dogmeat, Constant Companion" — the set+number lookup bypasses name matching.
+    dogmeat = {
+        "name": "Dogmeat, Ever Loyal",
+        "set": "pip",
+        "collector_number": "1",
+        "image_uris": {"normal": "https://example.com/dogmeat.jpg"},
+    }
+    mock_scryfall.post("/cards/collection").mock(
+        return_value=httpx.Response(200, json={"data": [dogmeat], "not_found": []})
+    )
+    entries = [("Dogmeat, Constant Companion", "PIP", "1")]
+    found, not_found = await scryfall_service.get_cards_batch(entries)
+    # Result is keyed by the requested name, not the canonical name
+    assert "Dogmeat, Constant Companion" in found
+    assert found["Dogmeat, Constant Companion"]["image_uri"] == "https://example.com/dogmeat.jpg"
+    assert not_found == []
+
+
+@pytest.mark.asyncio
+async def test_batch_fetch_falls_back_to_name_when_set_num_fails(mock_scryfall):
+    """Cards whose set+number Scryfall can't resolve should be retried by name."""
+    # Pass 1: set+number lookup — Scryfall returns not_found for the PLST card.
+    # Pass 2: name-only retry — Scryfall finds it by canonical name.
+    plst_card = {
+        "name": "Ainok Bond-Kin",
+        "image_uris": {"normal": "https://example.com/ainok.jpg"},
+    }
+    call_count = 0
+
+    def side_effect(request):
+        nonlocal call_count
+        call_count += 1
+        if call_count == 1:
+            # First call (set+number) — return empty data, card in not_found.
+            return httpx.Response(200, json={
+                "data": [],
+                "not_found": [{"set": "plst", "collector_number": "ktk-3"}],
+            })
+        # Second call (name fallback) — return the card.
+        return httpx.Response(200, json={"data": [plst_card], "not_found": []})
+
+    mock_scryfall.post("/cards/collection").mock(side_effect=side_effect)
+    entries = [("Ainok Bond-Kin", "PLST", "KTK-3")]
+    found, not_found = await scryfall_service.get_cards_batch(entries)
+    assert "Ainok Bond-Kin" in found
+    assert found["Ainok Bond-Kin"]["image_uri"] == "https://example.com/ainok.jpg"
+    assert not_found == []
+    assert call_count == 2  # pass 1 + pass 2
 
 
 @pytest.mark.asyncio
