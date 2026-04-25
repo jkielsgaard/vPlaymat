@@ -17,7 +17,7 @@ from routers import cards, deck, game
 from session_store import flush_loop, cleanup_loop, get_or_create_session, get_session_id_for_token, _sanitize_session_id
 from websocket_manager import broadcast_state, manager
 
-APP_VERSION = "v1.6.0"
+APP_VERSION = "v1.8.0"
 
 app = FastAPI(title="vPlaymat API")
 app.state.limiter = limiter

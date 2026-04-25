@@ -216,6 +216,36 @@ async def get_spectator_token(session_id: str = Query(default="")):
     return {"token": token}
 
 
+class ArenaSizeRequest(BaseModel):
+    arena_width: int
+    arena_height: int
+    card_scale: float = 1.3
+
+
+class ZOrderRequest(BaseModel):
+    ids: list[str]
+
+
+@router.post("/arena-size")
+async def set_arena_size(request: ArenaSizeRequest, session_id: str = Query(default="")):
+    """Persist the player's arena dimensions and card scale so spectators render identically."""
+    gs = get_or_create_session(session_id or "default")
+    gs.arena_width = max(800, min(3840, request.arena_width))
+    gs.arena_height = max(500, min(2160, request.arena_height))
+    gs.card_scale = max(0.5, min(3.0, request.card_scale))
+    await broadcast_state(session_id or "default")
+    return {"ok": True}
+
+
+@router.post("/z-order")
+async def set_z_order(request: ZOrderRequest, session_id: str = Query(default="")):
+    """Persist the battlefield z-order so spectators see the same card stacking as the player."""
+    gs = get_or_create_session(session_id or "default")
+    gs.card_z_order = list(request.ids)
+    await broadcast_state(session_id or "default")
+    return {"ok": True}
+
+
 @router.post("/clear")
 async def clear_game(session_id: str = Query(default="")):
     """Wipe all cards and game data. Used when a session expires."""

@@ -75,6 +75,12 @@ export default function App() {
     if (sessionExpired) handleSessionExpiry()
   }, [sessionExpired, handleSessionExpiry])
 
+  // Sync arena dimensions to the backend so spectators render at the same canvas size.
+  // Runs on mount (to restore after page reload) and whenever the player resizes the arena.
+  useEffect(() => {
+    api.updateArenaSize(settings.arenaWidth, settings.arenaHeight, settings.cardScale).catch(() => {})
+  }, [settings.arenaWidth, settings.arenaHeight, settings.cardScale])
+
   async function handleToggleSpectatorZoneViewing(v: boolean) {
     await api.setSpectatorZoneViewing(v)
   }

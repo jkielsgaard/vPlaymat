@@ -18,6 +18,8 @@ describe('useSettings', () => {
   it('returns defaults when localStorage has no saved settings', () => {
     const { result } = renderHook(() => useSettings())
     expect(result.current.settings).toEqual(SETTINGS_DEFAULTS)
+    expect(result.current.settings.cardPreviewPosition).toBe('outside')
+    expect(result.current.settings.cardPreviewCorner).toBe('bottom-right')
   })
 
   it('loads saved settings from localStorage on mount', () => {

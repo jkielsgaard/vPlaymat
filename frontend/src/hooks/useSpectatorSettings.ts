@@ -6,12 +6,14 @@ export interface SpectatorSettings {
   previewEnabled: boolean
   previewScale: number
   previewCorner: SpectatorPreviewCorner
+  zoom: number
 }
 
 const DEFAULTS: SpectatorSettings = {
   previewEnabled: true,
   previewScale: 1.5,
   previewCorner: 'bottom-right',
+  zoom: 1.0,
 }
 
 const STORAGE_KEY = 'vmagic-spectator-prefs'

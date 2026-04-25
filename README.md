@@ -89,6 +89,7 @@ A Magic: The Gathering virtual playmat for personal use during online play (Spel
 ### Settings
 - Arena size — S (1200×700), M (1440×840), L (1680×980) preset buttons, or Custom for any size
 - Card scale, card preview scale
+- Card preview position — outside the battlefield (side panel) or inside at a chosen corner; not visible to spectators
 - Commander card scale and zone position
 - Zone viewer card scale, library browser height
 - Reveal overlay card scale
@@ -223,21 +224,26 @@ If you prefer not to use the Browser Source, you can capture your browser window
 - Node 20 (use [nvm](https://github.com/nvm-sh/nvm))
 - Podman or Docker (for production builds only)
 
-### Backend
+### Quick start with shell scripts
 
 ```bash
+bash dev.sh    # starts backend + frontend natively (http://localhost:5173)
+bash prod.sh   # builds and starts the production container (http://localhost:8080)
+bash test.sh   # runs backend (pytest) and frontend (vitest) test suites
+```
+
+### Manual setup
+
+```bash
+# Backend
 cd backend
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 uvicorn main:app --reload
 # API runs on http://localhost:8000
-# Interactive docs: http://localhost:8000/docs
-```
 
-### Frontend
-
-```bash
+# Frontend (separate terminal)
 cd frontend
 nvm use        # picks up .nvmrc (Node 20)
 npm install
@@ -245,33 +251,24 @@ npm run dev
 # App runs on http://localhost:5173
 ```
 
-### Run both with Podman (dev)
-
-```bash
-source backend/.venv/bin/activate
-podman-compose up
-```
-
-- Frontend: http://localhost:5173
-- Backend: http://localhost:8000
-
 ---
 
 ## Running tests
 
-### Backend
+Run both suites at once from the repo root:
 
 ```bash
-cd backend
-source .venv/bin/activate
-pytest -v
+bash test.sh
 ```
 
-### Frontend
+Or run them individually:
 
 ```bash
-cd frontend
-npm test -- --run
+# Backend
+cd backend && source .venv/bin/activate && pytest -v
+
+# Frontend
+cd frontend && npm test -- --run
 ```
 
 ---

@@ -133,3 +133,9 @@ export const clearGame = () =>
 export const getSpectatorToken = () =>
   request<{ token: string }>('POST', '/game/spectator-token')
 
+export const updateArenaSize = (arenaWidth: number, arenaHeight: number, cardScale: number) =>
+  request<{ ok: boolean }>('POST', '/game/arena-size', { arena_width: arenaWidth, arena_height: arenaHeight, card_scale: cardScale })
+
+export const updateZOrder = (ids: string[]) =>
+  request<{ ok: boolean }>('POST', '/game/z-order', { ids })
+

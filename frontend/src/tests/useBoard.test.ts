@@ -44,6 +44,10 @@ const emptyState: GameState = {
   commander_returns: 0,
   active_viewer: null,
   spectator_zone_viewing: false,
+  arena_width: 1200,
+  arena_height: 700,
+  card_scale: 1.3,
+  card_z_order: [],
 }
 
 const updatedState: GameState = {

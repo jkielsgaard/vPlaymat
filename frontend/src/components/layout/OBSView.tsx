@@ -17,17 +17,8 @@ import { CommanderDamage } from '../ui/CommanderDamage'
 import { SpectatorCardPreview } from '../cards/SpectatorCardPreview'
 import type { Card } from '../../types/game'
 
-// Card scale can be passed via ?scale= — dimensions fill 100vw/100vh
-const urlParams = new URLSearchParams(window.location.search)
-const CARD_SCALE = parseFloat(urlParams.get('scale') ?? '1')
 const BOTTOM_STRIP_H = 64
 const LEFT_COL_W = 110
-
-const spectatorSettings = {
-  ...SETTINGS_DEFAULTS,
-  cardScale: CARD_SCALE,
-  zoneViewerCardScale: 1.0,
-}
 
 export function SpectatorView() {
   const { gameState, tokenRejected } = useBoard()
@@ -49,11 +40,11 @@ export function SpectatorView() {
     }
   }, [gameState?.active_viewer])
 
-  // Remove body margin/scroll so the arena sits flush at 0,0 with no scrollbars
+  // Remove body margin so the arena sits flush at 0,0; allow scrolling if arena > viewport
   useEffect(() => {
     document.body.style.margin = '0'
     document.body.style.padding = '0'
-    document.body.style.overflow = 'hidden'
+    document.body.style.overflow = 'auto'
   }, [])
 
   if (tokenRejected) {
@@ -88,6 +79,13 @@ export function SpectatorView() {
   const commanderCard = allCards.find((c) => c.zone === 'command') ?? null
   const libraryCount = gameState.library_order.length
 
+  // Arena dimensions and card scale come from the player (synced via WebSocket).
+  // zoom=1.0 means 1:1 pixel match with the player's view.
+  const arenaW = gameState.arena_width
+  const arenaH = gameState.arena_height
+  const CARD_SCALE = gameState.card_scale
+  const scale = sprSettings.zoom
+
   const zoneCardScale = Math.min(CARD_SCALE, (LEFT_COL_W - 24) / 80)
   const zoneW = CARD_BASE_W * zoneCardScale
   const zoneH = CARD_BASE_H * zoneCardScale
@@ -108,12 +106,124 @@ export function SpectatorView() {
         ? exileCards
         : []
 
+  const spectatorSettings = { ...SETTINGS_DEFAULTS, cardScale: CARD_SCALE, zoneViewerCardScale: 1.0 }
+
   return (
     <SettingsContext.Provider value={{ settings: spectatorSettings, updateSettings: () => {} }}>
-      {/* Fill the entire viewport — used for OBS Browser Source and direct spectator sharing */}
+      {/* ⚙ gear — fixed to the viewport corner, never scaled */}
+      <div style={{ position: 'fixed', top: 8, right: 8, zIndex: 9999 }}>
+        <button
+          className="text-white/25 hover:text-white/60 text-base leading-none transition-colors"
+          onClick={() => setSettingsOpen((v) => !v)}
+          aria-label="Spectator settings"
+          title="Spectator settings"
+        >
+          ⚙
+        </button>
+
+        {settingsOpen && (
+          <div className="absolute top-7 right-0 bg-black/90 border border-gold/30 rounded-lg p-4 w-60 flex flex-col gap-4 shadow-xl backdrop-blur-sm">
+
+            <div>
+              <p className="text-gray-400 text-xs mb-1.5">
+                Zoom — {Math.round(sprSettings.zoom * 100)}%
+              </p>
+              <input
+                type="range"
+                min={0.5}
+                max={1.5}
+                step={0.05}
+                value={sprSettings.zoom}
+                onChange={(e) => updateSpr({ zoom: parseFloat(e.target.value) })}
+                className="w-full accent-gold"
+              />
+              <div className="flex justify-between text-gray-600 text-[10px] mt-0.5">
+                <span>50%</span><span>100%</span><span>150%</span>
+              </div>
+            </div>
+
+            <label className="flex items-center gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={sprSettings.previewEnabled}
+                onChange={(e) => updateSpr({ previewEnabled: e.target.checked })}
+                className="accent-gold"
+              />
+              <span className="text-gray-300 text-xs">Show card preview on hover</span>
+            </label>
+
+            {sprSettings.previewEnabled && (
+              <>
+                <div>
+                  <p className="text-gray-400 text-xs mb-1.5">
+                    Preview size — {sprSettings.previewScale.toFixed(1)}×
+                  </p>
+                  <input
+                    type="range"
+                    min={0.5}
+                    max={3.0}
+                    step={0.1}
+                    value={sprSettings.previewScale}
+                    onChange={(e) => updateSpr({ previewScale: parseFloat(e.target.value) })}
+                    className="w-full accent-gold"
+                  />
+                  <div className="flex justify-between text-gray-600 text-[10px] mt-0.5">
+                    <span>0.5×</span><span>3.0×</span>
+                  </div>
+                </div>
+
+                <div>
+                  <p className="text-gray-400 text-xs mb-1.5">Position</p>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {(
+                      [
+                        { value: 'top-left',     label: '↖ Top left' },
+                        { value: 'top-right',    label: '↗ Top right' },
+                        { value: 'bottom-left',  label: '↙ Bottom left' },
+                        { value: 'bottom-right', label: '↘ Bottom right' },
+                      ] as { value: SpectatorPreviewCorner; label: string }[]
+                    ).map(({ value, label }) => (
+                      <button
+                        key={value}
+                        className={`px-2 py-1 text-xs rounded border transition-colors ${
+                          sprSettings.previewCorner === value
+                            ? 'bg-gold text-black border-gold font-semibold'
+                            : 'bg-black/40 border-gold/20 text-gray-300 hover:border-gold/40'
+                        }`}
+                        onClick={() => updateSpr({ previewCorner: value })}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Canvas — rendered at the player's exact arena dimensions, then CSS-scaled by zoom.
+          transform-origin: top left keeps the top-left corner stable (matches OBS anchor). */}
       <div
-        style={{ width: '100vw', height: '100vh', background: '#1a2e1a', overflow: 'hidden' }}
-        className="flex flex-col relative"
+        style={{
+          width: arenaW * scale,
+          height: arenaH * scale,
+          overflow: 'hidden',
+        }}
+      >
+      <div
+        style={{
+          width: arenaW,
+          height: arenaH,
+          transform: `scale(${scale})`,
+          transformOrigin: 'top left',
+          background: '#1a2e1a',
+          overflow: 'hidden',
+          position: 'relative',
+          display: 'flex',
+          flexDirection: 'column',
+        }}
       >
         {/* Main area: left zone column + battlefield */}
         <div className="flex flex-row flex-1" style={{ minHeight: 0 }}>
@@ -226,7 +336,7 @@ export function SpectatorView() {
               onAddCounter={() => {}}
               onBulkMove={() => {}}
               cardScale={CARD_SCALE}
-              cardZOrder={[]}
+              cardZOrder={gameState.card_z_order ?? []}
               readOnly
             />
             {gameState.game_mode === 'commander' && commanderCard && (
@@ -282,82 +392,8 @@ export function SpectatorView() {
           />
         )}
 
-        {/* Spectator settings gear — fixed top-right corner */}
-        <div className="absolute top-2 right-2 z-50">
-          <button
-            className="text-white/25 hover:text-white/60 text-base leading-none transition-colors"
-            onClick={() => setSettingsOpen((v) => !v)}
-            aria-label="Spectator settings"
-            title="Spectator settings"
-          >
-            ⚙
-          </button>
-
-          {settingsOpen && (
-            <div className="absolute top-7 right-0 bg-black/90 border border-gold/30 rounded-lg p-4 w-60 flex flex-col gap-4 shadow-xl backdrop-blur-sm">
-
-              <label className="flex items-center gap-2 cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={sprSettings.previewEnabled}
-                  onChange={(e) => updateSpr({ previewEnabled: e.target.checked })}
-                  className="accent-gold"
-                />
-                <span className="text-gray-300 text-xs">Show card preview on hover</span>
-              </label>
-
-              {sprSettings.previewEnabled && (
-                <>
-                  <div>
-                    <p className="text-gray-400 text-xs mb-1.5">
-                      Preview size — {sprSettings.previewScale.toFixed(1)}×
-                    </p>
-                    <input
-                      type="range"
-                      min={0.5}
-                      max={3.0}
-                      step={0.1}
-                      value={sprSettings.previewScale}
-                      onChange={(e) => updateSpr({ previewScale: parseFloat(e.target.value) })}
-                      className="w-full accent-gold"
-                    />
-                    <div className="flex justify-between text-gray-600 text-[10px] mt-0.5">
-                      <span>0.5×</span><span>3.0×</span>
-                    </div>
-                  </div>
-
-                  <div>
-                    <p className="text-gray-400 text-xs mb-1.5">Position</p>
-                    <div className="grid grid-cols-2 gap-1.5">
-                      {(
-                        [
-                          { value: 'top-left',     label: '↖ Top left' },
-                          { value: 'top-right',    label: '↗ Top right' },
-                          { value: 'bottom-left',  label: '↙ Bottom left' },
-                          { value: 'bottom-right', label: '↘ Bottom right' },
-                        ] as { value: SpectatorPreviewCorner; label: string }[]
-                      ).map(({ value, label }) => (
-                        <button
-                          key={value}
-                          className={`px-2 py-1 text-xs rounded border transition-colors ${
-                            sprSettings.previewCorner === value
-                              ? 'bg-gold text-black border-gold font-semibold'
-                              : 'bg-black/40 border-gold/20 text-gray-300 hover:border-gold/40'
-                          }`}
-                          onClick={() => updateSpr({ previewCorner: value })}
-                        >
-                          {label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
-          )}
-        </div>
-
-      </div>
+      </div>{/* end inner canvas */}
+      </div>{/* end scale wrapper */}
     </SettingsContext.Provider>
   )
 }

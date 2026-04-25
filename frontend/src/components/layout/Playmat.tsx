@@ -68,7 +68,13 @@ export function Playmat({ gameState, logOpen, onCloseLog, betaBannerVisible = fa
   const [scryOpen, setScryOpen] = useState(false)
   const [revealOpen, setRevealOpen] = useState(false)
   const [confirmUntapAll, setConfirmUntapAll] = useState(false)
-  const [cardZOrder, setCardZOrder] = useState<string[]>([])
+  const [cardZOrder, setCardZOrder] = useState<string[]>(() => gameState.card_z_order ?? [])
+
+  // Applies a new z-order locally and persists it to the backend so spectators stay in sync.
+  function applyZOrder(next: string[]) {
+    setCardZOrder(next)
+    api.updateZOrder(next).catch(() => {})
+  }
 
   const { selectedIds, setSelectedIds } = useCardSelection()
 
@@ -82,7 +88,7 @@ export function Playmat({ gameState, logOpen, onCloseLog, betaBannerVisible = fa
   const commanderCard = allCards.find((c) => c.zone === 'command') ?? null
   const commanderCardAny = allCards.find((c) => c.is_commander) ?? null
 
-  const { arenaWidth, arenaHeight, cardScale, arenaBackground, pageBackground } = settings
+  const { arenaWidth, arenaHeight, cardScale, arenaBackground, pageBackground, cardPreviewPosition, cardPreviewCorner } = settings
   const battlefieldH = arenaHeight - BOTTOM_STRIP_H
   const turn = gameState.turn
 
@@ -97,10 +103,10 @@ export function Playmat({ gameState, logOpen, onCloseLog, betaBannerVisible = fa
     try {
       if (zone === 'battlefield') {
         await actions.moveCard(cardId, zone, 0.5, 0.5)
-        setCardZOrder(prev => [...prev.filter(id => id !== cardId), cardId])
+        applyZOrder([...cardZOrder.filter(id => id !== cardId), cardId])
       } else {
         await actions.moveCard(cardId, zone)
-        setCardZOrder(prev => prev.filter(id => id !== cardId))
+        applyZOrder(cardZOrder.filter(id => id !== cardId))
       }
       if (card) addEntry(turn, `Moved ${card.name} → ${ZONE_LABELS[zone] ?? zone}`)
     } catch {
@@ -118,7 +124,7 @@ export function Playmat({ gameState, logOpen, onCloseLog, betaBannerVisible = fa
       // Only update z-order for single-card drops.
       // Multi-drag z-order is handled once by handleGroupMoved to preserve internal order.
       if (!(selectedIds.has(cardId) && selectedIds.size > 1)) {
-        setCardZOrder(prev => [...prev.filter(id => id !== cardId), cardId])
+        applyZOrder([...cardZOrder.filter(id => id !== cardId), cardId])
       }
     } catch {
       addToast(`Failed to drop card`)
@@ -127,12 +133,10 @@ export function Playmat({ gameState, logOpen, onCloseLog, betaBannerVisible = fa
 
   function handleGroupMoved(groupIds: string[]) {
     // Bring the whole group to the front together, preserving their relative z-order.
-    setCardZOrder(prev => {
-      const groupSet = new Set(groupIds)
-      const groupInOrder = prev.filter(id => groupSet.has(id))
-      const missing = groupIds.filter(id => !prev.includes(id))
-      return [...prev.filter(id => !groupSet.has(id)), ...groupInOrder, ...missing]
-    })
+    const groupSet = new Set(groupIds)
+    const groupInOrder = cardZOrder.filter(id => groupSet.has(id))
+    const missing = groupIds.filter(id => !cardZOrder.includes(id))
+    applyZOrder([...cardZOrder.filter(id => !groupSet.has(id)), ...groupInOrder, ...missing])
   }
 
   function handleTap(cardId: string) {
@@ -247,9 +251,10 @@ export function Playmat({ gameState, logOpen, onCloseLog, betaBannerVisible = fa
     stackGap: settings.stackGap,
     attachGap: settings.attachGap,
     cardScale,
+    cardZOrder,
     handleMoveCard,
     handleTap,
-    setCardZOrder,
+    applyZOrder,
   })
 
   usePlaymatKeyboard({
@@ -260,10 +265,9 @@ export function Playmat({ gameState, logOpen, onCloseLog, betaBannerVisible = fa
     selectedIds,
   })
 
-  // Card preview width — reserved so panels never overlap it
+  // When preview is inside the arena, panels can use the full arena width.
   const previewWidth = Math.round(208 * settings.cardPreviewScale)
-  // Panels take the remaining width so the preview column is always visible
-  const panelWidth = arenaWidth - previewWidth - 16
+  const panelWidth = cardPreviewPosition === 'outside' ? arenaWidth - previewWidth - 16 : arenaWidth
 
   return (
     <div
@@ -415,16 +419,37 @@ export function Playmat({ gameState, logOpen, onCloseLog, betaBannerVisible = fa
             <RevealOverlay libraryCards={libraryCards} onClose={() => setRevealOpen(false)} />
           )}
 
+          {/* Card preview overlay — inside arena, player-only (not shown to spectators) */}
+          {cardPreviewPosition === 'inside' && hoveredCard && (() => {
+            const isTop = cardPreviewCorner.startsWith('top')
+            const isLeft = cardPreviewCorner.endsWith('left')
+            return (
+              <div
+                style={{
+                  position: 'absolute',
+                  zIndex: 90,
+                  top: isTop ? 8 : undefined,
+                  bottom: isTop ? undefined : BOTTOM_STRIP_H + 8,
+                  left: isLeft ? LEFT_COL_W + 8 : undefined,
+                  right: isLeft ? undefined : 8,
+                  pointerEvents: 'none',
+                }}
+              >
+                <CardPreview card={hoveredCard} variant="overlay" />
+              </div>
+            )
+          })()}
+
           {/* Toasts — inside arena so OBS captures them */}
           <ToastDisplay />
         </div>
         {/* ── End arena ─────────────────────────────────────────────────── */}
 
       {/* Below arena — outside OBS capture.
-          Flex row: panels on the left (panelWidth), card preview on the right (always visible). */}
+          Outside mode: panels left (panelWidth) + preview column right.
+          Inside mode: panels use full arena width, no preview column here. */}
       <div className="flex flex-row items-start mt-4">
 
-        {/* Panel / hand area — narrower than arenaWidth so preview never gets covered */}
         <div style={{ width: panelWidth }} className="shrink-0">
           {logOpen ? (
             <GameLog
@@ -475,10 +500,12 @@ export function Playmat({ gameState, logOpen, onCloseLog, betaBannerVisible = fa
           )}
         </div>
 
-        {/* Card preview — dedicated column, always visible, never overlapped by panels */}
-        <div className="shrink-0 pl-4 pt-2">
-          <CardPreview card={hoveredCard} />
-        </div>
+        {/* Card preview — outside mode only: dedicated column to the right of panels */}
+        {cardPreviewPosition === 'outside' && (
+          <div className="shrink-0 pl-4 pt-2">
+            <CardPreview card={hoveredCard} />
+          </div>
+        )}
 
       </div>
 

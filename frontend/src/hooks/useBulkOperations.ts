@@ -12,9 +12,10 @@ interface UseBulkOperationsParams {
   stackGap: number
   attachGap: number
   cardScale: number
+  cardZOrder: string[]
   handleMoveCard: (cardId: string, zone: Zone) => Promise<void>
   handleTap: (cardId: string) => void
-  setCardZOrder: React.Dispatch<React.SetStateAction<string[]>>
+  applyZOrder: (ids: string[]) => void
 }
 
 export function useBulkOperations({
@@ -26,16 +27,16 @@ export function useBulkOperations({
   stackGap,
   attachGap,
   cardScale,
+  cardZOrder,
   handleMoveCard,
   handleTap,
-  setCardZOrder,
+  applyZOrder,
 }: UseBulkOperationsParams) {
 
   async function handleBulkMove(cardIds: string[], zone: Zone) {
     for (const cardId of cardIds) {
       await handleMoveCard(cardId, zone)
     }
-    setCardZOrder(prev => prev.filter(id => !cardIds.includes(id)))
     setSelectedIds(new Set())
   }
 
@@ -94,9 +95,9 @@ export function useBulkOperations({
       api.moveCard(card.id, 'battlefield', nx, ny)
     })
 
-    // Set z-order explicitly: sorted[0] = back, sorted[last] = front
+    // Set z-order explicitly: sorted[0] = back, sorted[last] = front — persisted to backend
     const sortedIds = sorted.map(c => c.id)
-    setCardZOrder(prev => [...prev.filter(id => !sortedIds.includes(id)), ...sortedIds])
+    applyZOrder([...cardZOrder.filter(id => !sortedIds.includes(id)), ...sortedIds])
     setSelectedIds(new Set())
   }
 
@@ -129,10 +130,10 @@ export function useBulkOperations({
       api.moveCard(card.id, 'battlefield', nx, ny)
     })
 
-    // Z-order: equipment reversed (last-selected lowest z), then host (highest z)
+    // Z-order: equipment reversed (last-selected lowest z), then host (highest z) — persisted to backend
     const equipmentIds = equipment.map(c => c.id)
-    setCardZOrder(prev => [
-      ...prev.filter(id => id !== hostId && !equipmentIds.includes(id)),
+    applyZOrder([
+      ...cardZOrder.filter(id => id !== hostId && !equipmentIds.includes(id)),
       ...[...equipmentIds].reverse(),
       hostId,
     ])

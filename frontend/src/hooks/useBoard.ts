@@ -20,6 +20,10 @@ function getWsUrl(): string {
 // states are valid after a version upgrade within the same cache version.
 const GAME_STATE_DEFAULTS: Partial<GameState> = {
   graveyard_order: [],
+  arena_width: 1200,
+  arena_height: 700,
+  card_scale: 1.3,
+  card_z_order: [],
 }
 
 interface CachedEntry {

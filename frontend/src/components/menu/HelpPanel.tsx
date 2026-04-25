@@ -48,7 +48,7 @@ export function HelpPanel({ onClose }: HelpPanelProps) {
           <Row label="Click a card" desc="Tap or untap it" />
           <Row label="Right-click a card" desc="Open context menu (move to zone, flip face-down, transform, counters, copy)" />
           <Row label="Drag a card" desc="Drop onto the battlefield to place it at that position" />
-          <Row label="Hover a card" desc="Show large card preview in the corner" />
+          <Row label="Hover a card" desc="Show large card preview (outside or inside the battlefield — configurable in Settings)" />
           <Row label="Hover battlefield card" desc="Show counter toolbar (+1/+1 quick buttons and full counter menu ⊕)" />
         </Section>
 
@@ -238,7 +238,7 @@ export function HelpPanel({ onClose }: HelpPanelProps) {
             >
               GitHub
             </a>
-            . Version v1.6.0.
+            . Version v1.8.0 beta.
           </p>
         </Section>
 

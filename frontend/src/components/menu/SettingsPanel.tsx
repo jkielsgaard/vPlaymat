@@ -1,6 +1,6 @@
 // Settings panel — arena size, card scales, colours, spectator options, and other preferences.
 import { useState } from 'react'
-import type { CommanderZoneCorner, Settings } from '../../hooks/useSettings'
+import type { CommanderZoneCorner, PreviewCorner, Settings } from '../../hooks/useSettings'
 
 const ARENA_MIN_W = 800
 const ARENA_MAX_W = 1680
@@ -398,7 +398,52 @@ export function SettingsPanel({ settings, onUpdate, onClose, spectatorZoneViewin
             <div className="flex justify-between text-gray-500 text-xs mt-1">
               <span>0.5×</span><span>3.0×</span>
             </div>
-            <p className="text-gray-600 text-[10px] mt-1">Shown in the side panel — also controls panel width</p>
+
+            <label className="text-gray-500 text-xs block mt-3 mb-1">Position</label>
+            <div className="flex gap-2">
+              {(['outside', 'inside'] as const).map((pos) => (
+                <button
+                  key={pos}
+                  className={`flex-1 px-2 py-1.5 text-xs rounded border transition-colors capitalize ${
+                    settings.cardPreviewPosition === pos
+                      ? 'bg-gold text-black border-gold font-semibold'
+                      : 'bg-felt border-felt-light text-gray-300 hover:border-gold/40'
+                  }`}
+                  onClick={() => onUpdate({ cardPreviewPosition: pos })}
+                >
+                  {pos === 'outside' ? 'Outside battlefield' : 'Inside battlefield'}
+                </button>
+              ))}
+            </div>
+
+            {settings.cardPreviewPosition === 'inside' && (
+              <div className="mt-3">
+                <label className="text-gray-500 text-xs block mb-1">Corner</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {(
+                    [
+                      { value: 'top-left',     label: '↖ Top left' },
+                      { value: 'top-right',    label: '↗ Top right' },
+                      { value: 'bottom-left',  label: '↙ Bottom left' },
+                      { value: 'bottom-right', label: '↘ Bottom right' },
+                    ] as { value: PreviewCorner; label: string }[]
+                  ).map(({ value, label }) => (
+                    <button
+                      key={value}
+                      className={`px-2 py-1.5 text-xs rounded border transition-colors ${
+                        settings.cardPreviewCorner === value
+                          ? 'bg-gold text-black border-gold font-semibold'
+                          : 'bg-felt border-felt-light text-gray-300 hover:border-gold/40'
+                      }`}
+                      onClick={() => onUpdate({ cardPreviewCorner: value })}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-gray-600 text-[10px] mt-1">Not visible in the spectator view</p>
+              </div>
+            )}
           </div>
 
           {/* Reveal overlay */}

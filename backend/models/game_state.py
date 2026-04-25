@@ -30,6 +30,12 @@ class GameState:
     active_viewer: Optional[str] = None  # "graveyard" | "exile" | None
     # Whether spectators are allowed to open the zone viewer independently
     spectator_zone_viewing: bool = False
+    # Arena pixel dimensions and card scale — broadcast so spectators render identically to the player
+    arena_width: int = 1200
+    arena_height: int = 700
+    card_scale: float = 1.3
+    # Battlefield z-order — card IDs from back (index 0) to front (last), broadcast to spectators
+    card_z_order: List[str] = field(default_factory=list)
     # Session tracking — not exposed to the frontend via to_dict()
     session_id: Optional[str] = field(default=None, compare=False)
     last_active: float = field(default=0.0, compare=False)  # unix timestamp
@@ -61,6 +67,10 @@ class GameState:
         self.poison_counters = 0
         self.commander_returns = 0
         self.active_viewer = None
+        self.arena_width = 1200
+        self.arena_height = 700
+        self.card_scale = 1.3
+        self.card_z_order = []
 
     # ------------------------------------------------------------------
     # Setup
@@ -111,6 +121,7 @@ class GameState:
         self.poison_counters = 0
         self.commander_returns = 0
         self.active_viewer = None
+        self.card_z_order = []
         self.shuffle()
         # Restore the commander card to the command zone
         for card in self.cards.values():
@@ -358,6 +369,10 @@ class GameState:
             commander_returns=data.get("commander_returns", 0),
             active_viewer=data.get("active_viewer"),
             spectator_zone_viewing=data.get("spectator_zone_viewing", False),
+            arena_width=data.get("arena_width", 1200),
+            arena_height=data.get("arena_height", 700),
+            card_scale=data.get("card_scale", 1.3),
+            card_z_order=data.get("card_z_order", []),
             session_id=session_id,
             last_active=data.get("last_active", 0.0),
         )
@@ -379,6 +394,10 @@ class GameState:
             "commander_returns": self.commander_returns,
             "active_viewer": self.active_viewer,
             "spectator_zone_viewing": self.spectator_zone_viewing,
+            "arena_width": self.arena_width,
+            "arena_height": self.arena_height,
+            "card_scale": self.card_scale,
+            "card_z_order": list(self.card_z_order),
         }
 
     def to_persist_dict(self) -> dict:

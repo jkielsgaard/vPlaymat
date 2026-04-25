@@ -175,3 +175,47 @@ def test_from_dict_restores_card_properties():
     assert card.x == pytest.approx(0.3)
     assert card.y == pytest.approx(0.7)
     assert state.last_active == pytest.approx(123456.0)
+
+
+# ---------------------------------------------------------------------------
+# arena_width / arena_height
+# ---------------------------------------------------------------------------
+
+def test_arena_dimensions_default_values():
+    state = GameState()
+    assert state.arena_width == 1200
+    assert state.arena_height == 700
+
+
+def test_arena_dimensions_included_in_to_dict():
+    state = GameState()
+    state.arena_width = 1440
+    state.arena_height = 840
+    d = state.to_dict()
+    assert d["arena_width"] == 1440
+    assert d["arena_height"] == 840
+
+
+def test_arena_dimensions_round_trip_via_from_dict():
+    state = GameState()
+    state.arena_width = 1680
+    state.arena_height = 980
+    d = state.to_persist_dict()
+    restored = GameState.from_dict(d, "sess-1")
+    assert restored.arena_width == 1680
+    assert restored.arena_height == 980
+
+
+def test_arena_dimensions_default_on_missing_keys():
+    state = GameState.from_dict({}, "sess-1")
+    assert state.arena_width == 1200
+    assert state.arena_height == 700
+
+
+def test_clear_state_resets_arena_dimensions():
+    state = GameState()
+    state.arena_width = 1920
+    state.arena_height = 1080
+    state.clear_state()
+    assert state.arena_width == 1200
+    assert state.arena_height == 700

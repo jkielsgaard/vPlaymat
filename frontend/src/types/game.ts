@@ -33,4 +33,8 @@ export interface GameState {
   commander_returns: number
   active_viewer: 'graveyard' | 'exile' | null
   spectator_zone_viewing: boolean
+  arena_width: number
+  arena_height: number
+  card_scale: number
+  card_z_order: string[]
 }

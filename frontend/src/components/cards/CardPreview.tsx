@@ -4,24 +4,26 @@ import { useSettingsContext } from '../../contexts/SettingsContext'
 
 interface CardPreviewProps {
   card: Card | null
+  // 'panel' (default): inline, parent controls placement, holds space when empty.
+  // 'overlay': no placeholder; caller absolutely-positions the wrapper.
+  variant?: 'panel' | 'overlay'
 }
 
-/**
- * Inline card preview — rendered inside the private side panel to the right of
- * the arena. No fixed/absolute positioning; the parent controls placement.
- * Renders a placeholder of the same width when no card is hovered so the
- * panel width stays stable.
- */
-export function CardPreview({ card }: CardPreviewProps) {
+export function CardPreview({ card, variant = 'panel' }: CardPreviewProps) {
   const { settings } = useSettingsContext()
   const previewWidth = Math.round(208 * settings.cardPreviewScale)
 
   if (!card) {
+    // Overlay mode renders nothing when no card is hovered — parent shows/hides the wrapper.
+    if (variant === 'overlay') return null
     return <div style={{ width: previewWidth }} />
   }
 
   return (
-    <div style={{ width: previewWidth }} className="drop-shadow-2xl">
+    <div
+      style={{ width: previewWidth }}
+      className={`drop-shadow-2xl ${variant === 'overlay' ? 'rounded-xl bg-black/60 p-1' : ''}`}
+    >
       <img
         src={card.image_uri}
         alt={card.name}

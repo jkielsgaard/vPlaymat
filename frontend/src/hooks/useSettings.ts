@@ -1,6 +1,8 @@
 import { useState } from 'react'
 
 export type CommanderZoneCorner = 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left'
+export type PreviewPosition = 'outside' | 'inside'
+export type PreviewCorner = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'
 
 export interface Settings {
   gameMode: 'normal' | 'commander'
@@ -12,6 +14,8 @@ export interface Settings {
   commanderCardScale: number
   commanderZoneCorner: CommanderZoneCorner
   cardPreviewScale: number
+  cardPreviewPosition: PreviewPosition
+  cardPreviewCorner: PreviewCorner
   zoneViewerCardScale: number
   libraryBrowserHeight: number
   counterBadgeScale: number
@@ -31,6 +35,8 @@ export const SETTINGS_DEFAULTS: Settings = {
   commanderCardScale: 1.2,
   commanderZoneCorner: 'top-right',
   cardPreviewScale: 1.0,
+  cardPreviewPosition: 'outside',
+  cardPreviewCorner: 'bottom-right',
   zoneViewerCardScale: 1.0,
   libraryBrowserHeight: 160,
   counterBadgeScale: 1.5,

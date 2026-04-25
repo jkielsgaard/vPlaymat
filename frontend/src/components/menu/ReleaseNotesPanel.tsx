@@ -50,8 +50,18 @@ export function ReleaseNotesPanel({ onClose }: ReleaseNotesPanelProps) {
             </button>
           </div>
 
+          <Version version="v1.8.0" date="April 2026">
+            <Item>Card hover preview position is now configurable — choose Outside battlefield (original behaviour, shown in the side panel) or Inside battlefield with a corner picker (top-left, top-right, bottom-left, bottom-right); not shown in the spectator view</Item>
+            <Item>Battlefield z-order is now persisted to the backend so the spectator view always shows cards stacked in the same order as the player</Item>
+          </Version>
+
+          <Version version="v1.7.0" date="April 2026">
+            <Item>Spectator view now renders at the player's exact arena size — card positions and layout match the player's board precisely regardless of the spectator's browser window size</Item>
+            <Item>Spectator ⚙ panel gains a Zoom slider (50%–150%) so the spectator can scale the view to suit their screen; setting is saved per browser</Item>
+          </Version>
+
           <Version version="v1.6.0" date="April 2026">
-            <Item>Arena size presets — HD (1280×720), Full HD (1920×1080), and QHD (2560×1440) buttons replace the free-form number inputs; a Custom option still lets you enter any size</Item>
+            <Item>Arena size presets — S (1200×700), M (1440×840), and L (1680×980) buttons based on the real MTG playmat 12:7 ratio; a Custom option still lets you enter any size</Item>
           </Version>
 
           <Version version="v1.5.0" date="April 2026">
